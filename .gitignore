@@ -1,0 +1,13 @@
+node_modules/
+.env
+.env.*
+!.env.example
+auth/
+session/
+sessions/
+auth_info/
+auth_info_baileys/
+creds.json
+*.pem
+*.key
+logs/

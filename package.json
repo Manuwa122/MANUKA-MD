@@ -1,0 +1,21 @@
+{
+  "name": "manuka-md",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test",
+    "check": "node scripts/check.mjs"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "6.7.24",
+    "dotenv": "16.6.1",
+    "pino": "9.9.0",
+    "qrcode-terminal": "0.12.0",
+    "sharp": "0.34.3"
+  }
+}

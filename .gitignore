@@ -11,3 +11,7 @@ creds.json
 *.pem
 *.key
 logs/
+*.backup*
+*.duplicate-backup
+*.log
+data/

@@ -9,7 +9,7 @@ export function menuText(mode = 'self') {
   return `╭── ✦ ${name} ✦ ──╮
    YOUR SMART WHATSAPP ASSISTANT
 ╰──────────────────╯
-🟢 Online • v3.0.0 • ${mode.toUpperCase()}
+🟢 Online • v4.0.0 • ${mode.toUpperCase()}
 👑 ${process.env.OWNER_NAME || 'Manuka Chamath'}
 
 ╭─ 🤖 AI ASSISTANT
@@ -22,7 +22,7 @@ export function menuText(mode = 'self') {
 │ ${p}rewrite / ${p}translate <text>
 │ ${p}summarize <text> — or reply to text
 │ ${p}ideas / ${p}caption <subject>
-╰─ AI tools • Ollama required
+╰─ AI tools • Groq or Ollama
 
 ╭─ 🔐 YOUR PERSONAL SPACE (PRIVATE CHAT)
 │ ${p}note add <text> • ${p}note list
@@ -88,6 +88,6 @@ export function menuText(mode = 'self') {
 │ ${p}settings
 ╰─ Commands from linked account only
 
-${p}ping • ${p}status • ${p}owner • ${p}help
+${p}ping • ${p}status • ${p}health • ${p}owner • ${p}help
 ✦ Powered by ${name}`;
 }

@@ -53,7 +53,7 @@ async function connect() {
       const jid = msg.key.remoteJid;
       if (!msg.message || !jid || !/@(g\.us|s\.whatsapp\.net|lid)$/.test(jid)) continue;
       const body = unwrap(msg.message), text = textOf(body), parsed = parseCommand(text, prefix);
-      const auto = !parsed && shouldAutoReply(msg, text, settings.data);
+      const auto = !parsed && shouldAutoReply(msg, text, settings.data) && !settings.data.pausedChats?.includes(jid);
       if (!auto && (!parsed || (settings.data.mode === 'self' && !msg.key.fromMe))) continue;
       const id = `${jid}:${msg.key.id}`;
       if (seen.has(id)) continue;
@@ -78,8 +78,8 @@ async function connect() {
       }
       catch (error) {
         metrics.errors++;
-        const known = /Ollama|Media|Question|Sticker|Download|Supported|Group|භාවිතය|වෙන්න|දෙන්න|කරන්න|command|Channel|Chat|Voice|Personal|member|ලොකු|update/i.test(error.message || '');
-        if (!auto) await sock.sendMessage(jid, { text: known ? error.message : 'Command failed. Ollama / FFmpeg / yt-dlp setup සහ connection බලන්න.' }, { quoted: msg }).catch(() => {});
+        const known = /Groq|API|rate limit|quota|Ollama|Media|Question|Sticker|Download|Supported|Group|භාවිතය|වෙන්න|දෙන්න|කරන්න|command|Channel|Chat|Voice|Personal|member|ලොකු|update/i.test(error.message || '');
+        if (!auto) await sock.sendMessage(jid, { text: known ? error.message : 'Command failed. Check AI credentials, network, and bot logs.' }, { quoted: msg }).catch(() => {});
         console.error('Command failed:', parsed?.command || 'auto-reply', error.code || error.name);
       } finally { busy.delete(jid); }
     }

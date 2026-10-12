@@ -53,6 +53,7 @@ export function menuText(mode = 'self') {
 ╭─ 🎙️ VOICE STUDIO
 │ ${p}voice si / en / ta <text>
 │ ${p}aivoice <question>
+│ ${p}listenvoice on / off — owner, private chat
 ╰─ Google TTS • Python/gTTS/FFmpeg required
 
 ╭─ 📌 PERSONAL TOOLBOX (PRIVATE CHAT)

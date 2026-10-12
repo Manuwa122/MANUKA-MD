@@ -4,14 +4,14 @@ import { dirname } from 'node:path';
 export class Settings {
   constructor(path = process.env.SETTINGS_FILE || './data/settings.json') {
     this.path = path;
-    this.data = { mode: process.env.MODE || 'self', autoChats: [], welcomeGroups: [], autoVoiceChats: [] };
+    this.data = { mode: process.env.MODE || 'self', autoChats: [], welcomeGroups: [], autoVoiceChats: [], listenVoiceChats: [] };
     this.pending = Promise.resolve();
   }
   async load() {
     try {
       const data = JSON.parse(await readFile(this.path, 'utf8'));
       if (!['self', 'public'].includes(data.mode) || !Array.isArray(data.autoChats) || !Array.isArray(data.welcomeGroups)) throw new Error('Invalid settings');
-      this.data = { mode: data.mode, autoChats: data.autoChats.filter(x => typeof x === 'string'), welcomeGroups: data.welcomeGroups.filter(x => typeof x === 'string'), autoVoiceChats: (Array.isArray(data.autoVoiceChats) ? data.autoVoiceChats : []).filter(x => typeof x === 'string') };
+      this.data = { mode: data.mode, autoChats: data.autoChats.filter(x => typeof x === 'string'), welcomeGroups: data.welcomeGroups.filter(x => typeof x === 'string'), autoVoiceChats: (Array.isArray(data.autoVoiceChats) ? data.autoVoiceChats : []).filter(x => typeof x === 'string'), listenVoiceChats: (Array.isArray(data.listenVoiceChats) ? data.listenVoiceChats : []).filter(x => typeof x === 'string') };
     } catch (error) { if (error.code !== 'ENOENT') throw error; }
     return this;
   }

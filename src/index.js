@@ -1,4 +1,5 @@
 import { sendVoice } from './voice.js';
+import { isIncomingVoice, transcribeVoice } from './voice-input.js';
 import { FeatureStore } from './features.js';
 import 'dotenv/config';
 import makeWASocket, { DisconnectReason, useMultiFileAuthState, makeCacheableSignalKeyStore } from '@whiskeysockets/baileys';
@@ -53,8 +54,9 @@ async function connect() {
       const jid = msg.key.remoteJid;
       if (!msg.message || !jid || !/@(g\.us|s\.whatsapp\.net|lid)$/.test(jid)) continue;
       const body = unwrap(msg.message), text = textOf(body), parsed = parseCommand(text, prefix);
+      const voiceAuto = isIncomingVoice(msg, body, settings.data.listenVoiceChats?.includes(jid));
       const auto = !parsed && shouldAutoReply(msg, text, settings.data) && !settings.data.pausedChats?.includes(jid);
-      if (!auto && (!parsed || (settings.data.mode === 'self' && !msg.key.fromMe))) continue;
+      if (!auto && !voiceAuto && (!parsed || (settings.data.mode === 'self' && !msg.key.fromMe))) continue;
       const id = `${jid}:${msg.key.id}`;
       if (seen.has(id)) continue;
       seen.set(id, Date.now());
@@ -63,7 +65,13 @@ async function connect() {
       if (busy.has(jid) || now - (cooldowns.get(sender) || 0) < 3000 || busy.size >= 3) continue;
       cooldowns.set(sender, now); busy.add(jid);
       try {
-        if (auto) {
+        if (voiceAuto) {
+          const transcript = await transcribeVoice(body.audioMessage);
+          const answer = await ai.answer(`${jid}:${sender}`, `Reply briefly in Sinhala script (max 800 characters) to this voice note transcript:\n${transcript}`);
+          await sock.sendMessage(jid, { text: `🎧 ${transcript}\n🤖 ${answer}` }, { quoted: msg });
+          try { await sendVoice(sock, jid, answer.slice(0, 1500), msg); }
+          catch { await sock.sendMessage(jid, { text: 'Voice generation unavailable; text reply shown above.' }, { quoted: msg }); }
+        } else if (auto) {
           const voiceEnabled = settings.data.autoVoiceChats.includes(jid);
           const voiceLanguage = { si: 'Sinhala script', en: 'English', ta: 'Tamil script' }[process.env.VOICE_LANG || 'si'] || 'Sinhala script';
           const prompt = voiceEnabled ? `Reply briefly in ${voiceLanguage}, under 1200 characters, suitable for spoken audio.\nUser message:\n${text.slice(0,3500)}` : text;
@@ -79,7 +87,7 @@ async function connect() {
       catch (error) {
         metrics.errors++;
         const known = /Groq|API|rate limit|quota|Ollama|Media|Question|Sticker|Download|Supported|Group|භාවිතය|වෙන්න|දෙන්න|කරන්න|command|Channel|Chat|Voice|Personal|member|ලොකු|update/i.test(error.message || '');
-        if (!auto) await sock.sendMessage(jid, { text: known ? error.message : 'Command failed. Check AI credentials, network, and bot logs.' }, { quoted: msg }).catch(() => {});
+        if (!auto || voiceAuto) await sock.sendMessage(jid, { text: known ? error.message : 'Command failed. Check AI credentials, network, and bot logs.' }, { quoted: msg }).catch(() => {});
         console.error('Command failed:', parsed?.command || 'auto-reply', error.code || error.name);
       } finally { busy.delete(jid); }
     }

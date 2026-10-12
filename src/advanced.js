@@ -49,8 +49,15 @@ export async function handleAdvanced(sock, msg, body, parsed, runtime, key) {
     } finally { await rm(dir, { recursive: true, force: true }); }
     return true;
   }
-  if (['voice','aivoice','autovoice'].includes(cmd)) {
+  if (['voice','aivoice','autovoice','listenvoice'].includes(cmd)) {
     const voice = runtime.sendVoice || sendVoice;
+    if (cmd === 'listenvoice') {
+      owner(msg);
+      if (!/@(s\.whatsapp\.net|lid)$/.test(jid) || !['on', 'off'].includes(input)) throw new Error('Private chat එකක .listenvoice on / off යවන්න.');
+      await runtime.settings.update(data => { data.listenVoiceChats = setMembership(data.listenVoiceChats || [], jid, input === 'on'); });
+      await reply(`🎧 Two-way voice AI ${input.toUpperCase()} for this private chat. Incoming voice is sent to Groq for transcription.`);
+      return true;
+    }
     if (cmd === 'autovoice') {
       owner(msg);
       if (!/@(s\.whatsapp\.net|lid)$/.test(jid) || !['on','off'].includes(input)) throw new Error('භාවිතය: private chat එකක .autovoice on / off');

@@ -93,6 +93,7 @@ export async function handleCommand(sock, msg, body, parsed, runtime = {}) {
     const dir = await mkdtemp(join(tmpdir(), 'manuka-download-'));
     try {
       const args = ['--ignore-config','--no-playlist','--max-filesize','20M','--match-filter','duration <= 300 & !is_live','--socket-timeout','15','--retries','1','--no-warnings','--restrict-filenames','-o',join(dir,'media.%(ext)s')];
+      if (['tiktok','tt'].includes(cmd)) args.push('--impersonate','chrome');
       if (cmd === 'audio') args.push('-f','bestaudio/best','-x','--audio-format','mp3');
       else args.push('-f','best[ext=mp4][height<=720]/best[ext=mp4]');
       if (process.env.FFMPEG_PATH) args.push('--ffmpeg-location', process.env.FFMPEG_PATH);

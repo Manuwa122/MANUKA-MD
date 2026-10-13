@@ -93,7 +93,12 @@ export async function handleCommand(sock, msg, body, parsed, runtime = {}) {
     const dir = await mkdtemp(join(tmpdir(), 'manuka-download-'));
     try {
       const args = ['--ignore-config','--no-playlist','--max-filesize','20M','--match-filter','duration <= 300 & !is_live','--socket-timeout','15','--retries','1','--no-warnings','--restrict-filenames','-o',join(dir,'media.%(ext)s')];
-      if (['tiktok','tt'].includes(cmd)) args.push('--impersonate','chrome');
+      const mediaHost = new URL(url).hostname;
+      const isTikTok = /(^|\\.)tiktok\\.com$/.test(mediaHost);
+      const isFacebook = ['facebook.com','www.facebook.com','fb.watch'].includes(mediaHost);
+      const isYouTube = ['youtube.com','www.youtube.com','m.youtube.com','youtu.be'].includes(mediaHost);
+      if (isTikTok || isFacebook) args.push('--impersonate','chrome');
+      if (isYouTube) args.push('--js-runtimes','node');
       if (cmd === 'audio') args.push('-f','bestaudio/best','-x','--audio-format','mp3');
       else args.push('-f','best[ext=mp4][height<=720]/best[ext=mp4]');
       if (process.env.FFMPEG_PATH) args.push('--ffmpeg-location', process.env.FFMPEG_PATH);
@@ -105,8 +110,14 @@ export async function handleCommand(sock, msg, body, parsed, runtime = {}) {
       const buffer = await readFile(path);
       return await sock.sendMessage(jid, cmd === 'audio' ? { audio: buffer, mimetype: 'audio/mpeg' } : { video: buffer, mimetype: 'video/mp4', caption: 'MANUKA-MD' }, { quoted: msg });
     } catch (error) {
-      if (/Download/.test(error.message)) throw error;
-      throw new Error('Download failed: update yt-dlp, check FFmpeg and use a public video ≤5 min / ≤20MB. Login/region restrictions may prevent downloads.');
+      if (/Download/.test(error.message || '')) throw error;
+      const details = String(error.stderr || error.message || '');
+      console.error('Media download failed:', details.slice(-1400).replace(/https?:\\/\\/[^\\s]+/g, '[URL]'));
+      if (/sign in to confirm|not a bot|bot detection/i.test(details)) throw new Error('YouTube requires sign-in / bot verification on this AWS server. Try a publicly accessible video; the server may still be restricted.');
+      if (/private video|login required|log in to|login to|cookies/i.test(details)) throw new Error('This video requires login or access permission. Public videos only.');
+      if (/403|forbidden|unexpected response from webpage/i.test(details)) throw new Error('Video website rejected this server request (HTTP 403 / access challenge). Try another public link.');
+      if (/unsupported url|video is unavailable|not available/i.test(details)) throw new Error('Video URL is unsupported or unavailable. Check the link.');
+      throw new Error('Media download failed. Check public URL, yt-dlp, FFmpeg, network, and 5 min / 20 MB limits.');
     } finally { await rm(dir, { recursive: true, force: true }); }
   }
   if (['group','subject','desc','kick','promote','demote','welcome'].includes(cmd)) {

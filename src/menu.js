@@ -46,9 +46,9 @@ export function menuText(mode = 'self') {
 │ ${p}video <URL>
 │ ${p}audio <URL>
 │ ${p}tiktok / ${p}tt <TikTok URL>
-│ ${p}file / ${p}download <direct HTTPS URL>
+│ ${p}file / ${p}download / ${p}getfile <direct HTTPS URL>\n│ ${p}file <HTTPS URL> | custom-name.ext
 │ ${p}document [filename] — reply to media/file
-╰─ Videos ≤5 min/20MB • Direct files ≤50MB default
+╰─ Videos ≤5 min/20MB • Direct files ≤50MB default, configurable to 100MB
 
 ╭─ 🎙️ VOICE STUDIO
 │ ${p}voice si / en / ta <text>

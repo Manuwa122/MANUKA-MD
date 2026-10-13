@@ -131,3 +131,13 @@ test('direct downloader rejects streamed oversize, HTML and endless redirects', 
   await assert.rejects(fetchFile('https://example.com/a',join(dir,'redirect'),10,responses(Array.from({length:6},()=>({status:302,headers:{location:'/next'}})))),/redirects/);
  } finally {await rm(dir,{recursive:true,force:true});}
 });
+
+test('getfile supports filename override and sanitizes path names', async () => {
+ const sock=mock();
+ const runtime={fetchFile:async(_url,path)=>{await writeFile(path,'file content'); return {filename:'remote.bin',mime:'application/octet-stream',size:12};}};
+ await run(sock,'getfile','https://example.com/download | invoice.pdf',runtime);
+ assert.equal(sock.calls.at(-1)[1].fileName,'invoice.pdf');
+ await run(sock,'file','https://example.com/download | ../photo.png',runtime);
+ assert.equal(sock.calls.at(-1)[1].fileName,'photo.png');
+ await assert.rejects(run(sock,'file','https://example.com/a | one | two',runtime),/භාවිතය/);
+});

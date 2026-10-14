@@ -23,7 +23,7 @@ export function menuText(mode = 'self') {
 ╭───〔 🎶 MUSIC PLAYER 〕
 │ ◈ ${p}song <title or singer>
 │ ◈ ${p}musicfile <authorized audio HTTPS URL>
-╰─ Cover • Artist • Duration • Preview ─
+╰─ Jamendo downloads • Apple • MusicBrainz ─
 
 ╭───〔 🎬 MOVIE ZONE 〕
 │ ◈ ${p}movie Avatar  •  ${p}film Avatar

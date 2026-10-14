@@ -17,7 +17,7 @@ test('Wikipedia fallback extracts poster language runtime and description',async
 test('movie returns image and metadata when iTunes yields no results',async()=>{
  const calls=[],sock={sendMessage:async(...a)=>calls.push(a)};
  await handleAdvanced(sock,{key:{remoteJid:'test@s.whatsapp.net'}},{},{command:'movie',input:'Avatar'},
- {movieFetch:async()=>({ok:true,json:async()=>({results:[]})}),wikiFetch:fake,openMovieFetch:async()=>({ok:true,json:async()=>({response:{docs:[]}})})},'test');
+ {movieFetch:async()=>({ok:true,json:async()=>({results:[]})}),wikiFetch:fake,posterFetch:async()=>{throw Error('offline')},openMovieFetch:async()=>({ok:true,json:async()=>({response:{docs:[]}})})},'test');
  assert.equal(calls.length,1);
  assert.match(calls[0][1].text,/Language: English/);
  assert.match(calls[0][1].text,/2h 42m/);

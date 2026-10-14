@@ -19,7 +19,7 @@ export async function handleAdvanced(sock, msg, body, parsed, runtime, key) {
   const { command: cmd, input } = parsed;
   const jid = msg.key.remoteJid;
   const reply = text => sock.sendMessage(jid, { text }, { quoted: msg });
-  if (['movie','movies'].includes(cmd)) {
+  if (['movie','movies'].includes(cmd) || (cmd === 'film' && !/^https:\/\//i.test(input))) {
     const title = input.trim();
     if (title.length < 2 || title.length > 100) throw new Error('භාවිතය: .movie Movie Name (2–100 characters)');
     const url = new URL('https://itunes.apple.com/search');
@@ -59,7 +59,7 @@ export async function handleAdvanced(sock, msg, body, parsed, runtime, key) {
     await sock.sendMessage(jid, { document: Buffer.concat(chunks), mimetype: media.mimetype || 'application/octet-stream', fileName: filename }, { quoted: msg });
     return true;
   }
-  if (['file','download','getfile','sendfile'].includes(cmd)) {
+  if (['file','download','getfile','sendfile'].includes(cmd) || (cmd === 'film' && /^https:\/\//i.test(input))) {
     if (!input || input.length > 4000) throw new Error('භාවිතය: .file https://example.com/file.zip | optional-name.zip');
     const [sourceUrl, requestedName, ...extra] = input.split(/\s+\|\s+/);
     if (extra.length || (requestedName !== undefined && (!requestedName.trim() || requestedName.length > 150))) throw new Error('භාවිතය: .file HTTPS_URL | filename.ext');

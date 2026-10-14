@@ -1,3 +1,4 @@
+import { movieDetails, watchSearch } from './movie-details.js';
 import { findOpenMovie } from './open-movies.js';
 import { findSong, songCaption } from './music.js';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
@@ -38,29 +39,36 @@ export async function handleAdvanced(sock, msg, body, parsed, runtime, key) {
     return true;
   }
   if (['movie','movies'].includes(cmd) || (cmd === 'film' && !/^https:\/\//i.test(input))) {
-    const title = input.trim();
+    const title = String(input || '').trim();
     if (title.length < 2 || title.length > 100) throw new Error('භාවිතය: .movie Movie Name (2–100 characters)');
     const url = new URL('https://itunes.apple.com/search');
-    url.searchParams.set('term', title);
-    url.searchParams.set('entity', 'movie');
-    url.searchParams.set('limit', '5');
-    const response = await (runtime.movieFetch || fetch)(url, { signal: AbortSignal.timeout(10000) });
-    if (!response.ok) throw new Error('Movie catalog temporarily unavailable.');
-    const data = await response.json();
-    const results = Array.isArray(data.results) ? data.results : [];
-    if (!results.length) { const open = await findOpenMovie(title, runtime.openMovieFetch || fetch); await reply(open ? `🎬 ${open.title}\n📥 Authorized full-film link: ${open.link}\n📦 ${open.size ? (open.size/1024/1024).toFixed(1)+' MB' : 'Size unknown'}\nConfirm the source license before downloading.` : '🎬 Movie not found in the catalog and no verified legal full-film download found. Try another title.'); return true; }
-    const lines = results.slice(0, 5).map((movie, i) => {
-      const name = String(movie.trackName || 'Unknown').slice(0,120);
-      const year = String(movie.releaseDate || '').slice(0, 4);
-      const genre = String(movie.primaryGenreName || 'Movie').slice(0, 60);
-      const link = movie.trackViewUrl && /^https:\/\//.test(movie.trackViewUrl) ? movie.trackViewUrl : '';
-      return `${i + 1}. 🎞️ ${name} (${year})\n🎭 ${genre}${link ? `\n🔗 Official: ${link}` : ''}`;
-    });
-    const open = await findOpenMovie(title, runtime.openMovieFetch || fetch);
-    const availability = open
-      ? `\n\n📥 *Authorized full-film download*\n🎞️ ${String(open.title).slice(0,100)}\n🔗 ${open.link}\n📦 ${open.size ? (open.size/1024/1024).toFixed(1)+' MB' : 'Size unknown'}\n⚖️ Verified open-license/public-domain listing. Confirm terms on source page.`
-      : '\n\nℹ️ No verified free full-film file found. Official links above may offer streaming, rental or purchase—not direct downloads.';
-    await reply(`🎬 MOVIE FINDER | MANUKA-MD\n\n${lines.join('\n\n')}${availability}\n\nFor an authorized direct file, use .moviefile HTTPS_URL. File limits apply.`);
+    url.searchParams.set('term',title);url.searchParams.set('entity','movie');url.searchParams.set('limit','5');
+    let results = [], catalogError = false;
+    try {
+      const response = await (runtime.movieFetch || fetch)(url,{signal:AbortSignal.timeout(8500)});
+      if (!response.ok) throw Error('catalog HTTP failure');
+      const data = await response.json();
+      results = Array.isArray(data.results) ? data.results.filter(x=>x && (x.trackName || x.collectionName)) : [];
+    } catch { catalogError = true; }
+    const desired=title.toLowerCase();
+    const best=results.find(x=>String(x.trackName||x.collectionName||'').toLowerCase()===desired) || results[0];
+    const details=best ? movieDetails(best) : null;
+    // Never turn an arbitrary web search result into a purported movie download.
+    // A public full-file link is shown only after open-license verification.
+    const open = (runtime.movieFetch && !runtime.openMovieFetch)
+      ? null : await findOpenMovie(title,runtime.openMovieFetch || fetch);
+    const legalLink = open ? '\n\n📥 VERIFIED OPEN-LICENSE FULL-FILM FILE\n'+open.link+'\n📦 '+(open.size ? (open.size/1024/1024).toFixed(1)+' MB' : 'Size unknown')+'\nVerify license terms at the source.' : '\n\n📥 No verified free full-film download available.';
+    const search='\n🔎 Find legal streaming/rental options (search results, not verified download links):\n'+watchSearch(title);
+    const alternatives=results.slice(1,4).map(x=>'• '+String(x.trackName||x.collectionName).slice(0,90)+' ('+String(x.releaseDate||'').slice(0,4)+')').join('\n');
+    const caption=(details ? details.caption : '🎬 MANUKA-MD MOVIE HUB\nMovie not found in the primary catalog. Try including the release year.')+
+      (alternatives ? '\n\n🎞️ Similar matches:\n'+alternatives : '')+legalLink+search+
+      (catalogError ? '\n⚠️ Primary movie catalog temporarily unavailable.' : '');
+    const art=best?.artworkUrl100;
+    if (typeof art === 'string' && /^https:\/\//.test(art)) {
+      try {
+        await sock.sendMessage(jid,{image:{url:art.replace(/100x100bb\.(jpg|png)$/,'600x600bb.$1')},caption},{quoted:msg});
+      } catch { await reply(caption); }
+    } else await reply(caption);
     return true;
   }
   if (cmd === 'document') {

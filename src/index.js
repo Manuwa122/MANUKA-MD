@@ -17,7 +17,8 @@ const ai = new AI();
 const metrics = { processed: 0, errors: 0 };
 const features = await new FeatureStore().load();
 const runtime = { settings, ai, metrics, features };
-const seen = new Map(), cooldowns = new Map(), busy = new Set();
+const seen = new Map(), cooldowns = new Map(), busy = new Set(), reacted = new Map();
+const reactionEmoji = ['❤️', '👍', '✨', '💙', '🔥', '😊'];
 let stopping = false, current, reconnect, reconnectAttempts = 0;
 async function connect() {
   const { state, saveCreds } = await useMultiFileAuthState(process.env.AUTH_DIR || './auth');
@@ -26,7 +27,7 @@ async function connect() {
   sock.ev.on('creds.update', () => saveCreds().catch(() => console.error('Session save failed. Check disk permissions.')));
   sock.ev.on('connection.update', ({ connection, lastDisconnect, qr }) => {
     if (qr) { console.log('WhatsApp > Linked devices > Link a device'); qrcode.generate(qr, { small: true }); }
-    if (connection === 'open') { reconnectAttempts = 0; console.log(`${process.env.BOT_NAME || 'MANUKA-MD'} connected. Send ${prefix}menu`); }
+    if (connection === 'open') { reconnectAttempts = 0; sock.sendPresenceUpdate(settings.data.presenceMode === 'online' ? 'available' : 'unavailable').catch(() => {}); console.log(`${process.env.BOT_NAME || 'MANUKA-MD'} connected. Send ${prefix}menu`); }
     if (connection === 'close' && !stopping) {
       const code = lastDisconnect?.error?.output?.statusCode;
       if ([DisconnectReason.loggedOut, DisconnectReason.badSession, DisconnectReason.connectionReplaced].includes(code)) {
@@ -51,7 +52,23 @@ async function connect() {
     if (type !== 'notify') return;
     for (const msg of messages) {
       const jid = msg.key.remoteJid;
+      if (jid === 'status@broadcast') {
+        if (settings.data.autoStatusView && msg.message && !msg.key.fromMe) {
+          try { await sock.readMessages([msg.key]); }
+          catch { console.error('Status view receipt failed (WhatsApp support may vary).'); }
+        }
+        continue;
+      }
       if (!msg.message || !jid || !/@(g\.us|s\.whatsapp\.net|lid)$/.test(jid)) continue;
+      if (settings.data.autoReact && !msg.key.fromMe && msg.key.id && !msg.message?.reactionMessage) {
+        const reactId = `${jid}:${msg.key.id}`;
+        if (!reacted.has(reactId)) {
+          reacted.set(reactId, Date.now());
+          const emoji = reactionEmoji[Math.floor(Math.random() * reactionEmoji.length)];
+          try { await sock.sendMessage(jid, { react: { text: emoji, key: msg.key } }); }
+          catch { console.error('Auto reaction failed.'); }
+        }
+      }
       const body = unwrap(msg.message), text = textOf(body), parsed = parseCommand(text, prefix);
       const auto = !parsed && shouldAutoReply(msg, text, settings.data) && !settings.data.pausedChats?.includes(jid);
       if (!auto && (!parsed || (settings.data.mode === 'self' && !msg.key.fromMe))) continue;
@@ -87,8 +104,9 @@ async function connect() {
 }
 setInterval(() => {
   const cutoff = Date.now() - 300000;
-  for (const map of [seen, cooldowns]) for (const [key, value] of map) if (value < cutoff) map.delete(key);
+  for (const map of [seen, cooldowns, reacted]) for (const [key, value] of map) if (value < cutoff) map.delete(key);
   ai.prune();
+  if (settings.data.presenceMode === 'online') current?.sendPresenceUpdate('available').catch(() => {});
 }, 60000).unref();
 function shutdown() { stopping = true; clearTimeout(reconnect); current?.end(new Error('Shutdown')); process.exit(0); }
 process.on('SIGINT', shutdown); process.on('SIGTERM', shutdown);

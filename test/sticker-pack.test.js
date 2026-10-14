@@ -20,7 +20,7 @@ test('generates a usable webp WhatsApp sticker',async()=>{
 test('keyword sticker command and pack listing work',async()=>{
  const calls=[],sock={sendMessage:async(...args)=>calls.push(args)};
  const msg={key:{remoteJid:'demo@s.whatsapp.net',fromMe:true}};
- await handleCommand(sock,msg,{}, {command:'sticker',input:'meme'});
+ await handleCommand(sock,msg,{}, {command:'sticker',input:'meme'}, {localMemeSticker: async()=>Buffer.from('test-real-meme-sticker')});
  assert.ok(Buffer.isBuffer(calls[0][1].sticker));
  await handleCommand(sock,msg,{}, {command:'stickers',input:''});
  assert.match(calls[1][1].text,/389 original text stickers/);

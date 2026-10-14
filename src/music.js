@@ -20,7 +20,9 @@ export async function findSong(term, fetcher=fetch, secondaryFetch=null) {
    const data=await res.json();
    tracks=Array.isArray(data.results)?data.results.filter(x=>typeof x?.trackName==='string'):[];
    const exact=tracks.find(x=>norm(x.trackName)===norm(title));
-   const partial=tracks.find(x=>norm(title).includes(norm(x.trackName))&&norm(x.trackName).length>=3);
+   const partial=tracks.find(x=>norm(title).includes(norm(x.trackName))&&norm(x.trackName).length>=3)
+     || tracks.find(x=>norm(x.trackName).includes(norm(title)) && norm(title).length>=4)
+     || tracks.find(x=>{ const hay=norm(x.trackName+' '+(x.artistName||''));return norm(title).split(' ').filter(w=>w.length>=3).every(w=>hay.includes(w)); });
    if(exact||partial)return exact||partial;
   }catch { /* continue with alternate source */ }
  }

@@ -1,3 +1,5 @@
+import { STICKER_PACK } from './sticker-pack.js';
+import { localMemeSticker } from './local-meme-stickers.js';
 import { makeSticker, stickerCategories, resolveStickerCategory } from './sticker-pack.js';
 import { sendAnnouncement } from './announcements.js';
 import { jingleWav } from './jingle.js';
@@ -117,12 +119,12 @@ export async function handleCommand(sock, msg, body, parsed, runtime = {}) {
     return reply(await ai.answer(memoryKey, input));
   }
   if (cmd === 'stickers' || (['sticker','s'].includes(cmd) && String(input||'').trim().toLowerCase() === 'list')) {
-    return reply('🎨 MANUKA-MD STICKER PACK • '+stickerCategories().length*12+' original stickers\\n\\n'+stickerCategories().map(x=>'• .sticker '+x).join('\\n')+'\\n\\nImage/video එකකට reply කරලා .sticker යවන්නත් පුළුවන්.');
+    return reply('🎨 MANUKA-MD STICKER PACK • '+stickerCategories().reduce((n,c)=>n+STICKER_PACK[c].length,0)+' original text stickers\\n\\n'+stickerCategories().map(x=>'• .sticker '+x).join('\\n')+'\\n\\nImage/video එකකට reply කරලා .sticker යවන්නත් පුළුවන්.');
   }
   if (['sticker','s'].includes(cmd) && String(input||'').trim()) {
     const category=resolveStickerCategory(input);
     if (!category) return reply('🎨 ඒ sticker category එක නැහැ. .stickers යවලා available categories බලන්න.');
-    const sticker=await makeSticker(category);
+    const sticker=(category==='meme' ? await (runtime.localMemeSticker||localMemeSticker)() : null) || await makeSticker(category);
     return sock.sendMessage(jid,{sticker},{quoted:msg});
   }
   if (['sticker','s'].includes(cmd)) {

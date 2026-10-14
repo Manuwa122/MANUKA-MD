@@ -85,6 +85,10 @@ export function menuText(mode = 'self') {
 ╭─ 👑 OWNER CONTROLS
 │ ${p}mode self / public
 │ ${p}autoreply on / off — current private chat
+│ ${p}autoreact on / off — react to incoming messages
+│ ${p}autostatus on / off — view status updates
+│ ${p}presence online / offline — presence preference
+│ ${p}freezelastseen — privacy settings guide
 │ ${p}settings
 ╰─ Commands from linked account only
 

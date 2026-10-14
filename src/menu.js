@@ -67,10 +67,6 @@ export function menuText(mode = 'self') {
 │ ◈ ${p}alive  •  ${p}ping
 │ ◈ ${p}status  •  ${p}health
 │ ◈ ${p}settings  •  ${p}owner
-│ ◈ ${p}pair <your phone>  (public request)
-│ ◈ ${p}approve <phone>  (owner)
-│ ◈ ${p}listbots  •  ${p}stopbot <phone>
-│ ◈ ${p}startbot <phone>  •  ${p}removebot <phone>
 ╰─────────────────────
 
 ✦ Powered by ${name}

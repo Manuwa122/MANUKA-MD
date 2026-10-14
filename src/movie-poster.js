@@ -26,8 +26,29 @@ export async function commonsPosterUrls(title, year='', fetcher=fetch) {
   }).flatMap(p=>(p.imageinfo||[]).filter(i=>/^image\/(jpeg|png|webp)$/.test(i.mime||'')).map(i=>i.thumburl||i.url).filter(x=>/^https:\/\//.test(x||''))).slice(0,3);
  } catch {return [];}
 }
+// Wikipedia REST page summaries provide thumbnail/original artwork independently
+// of the often-blocked MediaWiki action search API.
+export async function wikipediaPosterUrls(title, year='', fetcher=fetch) {
+ const name=String(title||'').trim().slice(0,90);
+ if(name.length<2)return [];
+ const attempts=[year ? name+' ('+year+' film)' : name+' (film)',name];
+ const urls=[];
+ for(const page of attempts) {
+  const api='https://en.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(page.replace(/ /g,'_'));
+  try {
+   const res=await fetcher(api,{signal:AbortSignal.timeout(6000),headers:{'User-Agent':'MANUKA-MD/4.2 (movie image lookup)'}});
+   if(!res.ok)continue;
+   const data=await res.json();
+   const label=String(data.title||'').toLowerCase();
+   if(!label.includes(name.toLowerCase()))continue;
+   const photo=data.originalimage?.source||data.thumbnail?.source;
+   if(typeof photo==='string' && /^https:\/\//.test(photo))urls.push(photo);
+  } catch { /* next page */ }
+ }
+ return urls;
+}
 export async function moviePoster(title, year, urls=[], fetcher=fetch) {
- const candidates=[...urls,...await commonsPosterUrls(title,year,fetcher)];
+ const candidates=[...urls,...await wikipediaPosterUrls(title,year,fetcher),...await commonsPosterUrls(title,year,fetcher)];
  for(const url of candidates) {
   if(typeof url!=='string'||!/^https:\/\//i.test(url))continue;
   try {

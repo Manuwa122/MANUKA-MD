@@ -48,7 +48,7 @@ export async function handleAdvanced(sock, msg, body, parsed, runtime, key) {
     if (!response.ok) throw new Error('Movie catalog temporarily unavailable.');
     const data = await response.json();
     const results = Array.isArray(data.results) ? data.results : [];
-    if (!results.length) { await reply('🎬 Movie not found. Another title try කරන්න.'); return true; }
+    if (!results.length) { const open = await findOpenMovie(title, runtime.openMovieFetch || fetch); await reply(open ? `🎬 ${open.title}\n📥 Authorized full-film link: ${open.link}\n📦 ${open.size ? (open.size/1024/1024).toFixed(1)+' MB' : 'Size unknown'}\nConfirm the source license before downloading.` : '🎬 Movie not found in the catalog and no verified legal full-film download found. Try another title.'); return true; }
     const lines = results.slice(0, 5).map((movie, i) => {
       const name = String(movie.trackName || 'Unknown').slice(0,120);
       const year = String(movie.releaseDate || '').slice(0, 4);

@@ -25,7 +25,9 @@ export function safeFilename(name) {
 }
 export async function fetchFile(url, path, limit = 50 * 1024 * 1024, dependencies = {}) {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 45000);
+  // Large disk-streamed downloads need a longer transfer window than small files.
+  const timeoutMs = limit > 100 * 1024 * 1024 ? 30 * 60 * 1000 : 45000;
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     for (let hop = 0; hop <= 5; hop++) {
       const u = fileURL(url);

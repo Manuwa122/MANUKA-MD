@@ -168,8 +168,8 @@ test('movie finder returns official catalog links and validates title', async ()
  let called=0;
  const runtime={movieFetch:async(url)=>{called++;assert.equal(url.hostname,'itunes.apple.com');return {ok:true,json:async()=>({results:[{trackName:'Sample Film',releaseDate:'2025-01-01',primaryGenreName:'Adventure',trackViewUrl:'https://itunes.apple.com/movie/example'}]})};}};
  await run(sock,'movie','Sample Film',runtime);
- assert.match(sock.calls.at(-1)[1].text,/Sample Film/);
- assert.match(sock.calls.at(-1)[1].text,/itunes.apple.com/);
+ assert.match(sock.calls.at(-1)[1].caption,/Sample Film/);
+ assert.match(sock.calls.at(-1)[1].caption,/itunes.apple.com/);
  assert.equal(called,1);
  await assert.rejects(run(sock,'movie','',runtime),/භාවිතය/);
 });

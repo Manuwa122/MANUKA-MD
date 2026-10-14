@@ -112,7 +112,7 @@ export async function handleCommand(sock, msg, body, parsed, runtime = {}) {
     } catch (error) {
       if (/Download/.test(error.message || '')) throw error;
       const details = String(error.stderr || error.message || '');
-      console.error('Media download failed:', details.slice(-1400).replace(/https?:\\/\\/[^\\s]+/g, '[URL]'));
+      console.error('Media download failed:', details.slice(-1400));
       if (/sign in to confirm|not a bot|bot detection/i.test(details)) throw new Error('YouTube requires sign-in / bot verification on this AWS server. Try a publicly accessible video; the server may still be restricted.');
       if (/private video|login required|log in to|login to|cookies/i.test(details)) throw new Error('This video requires login or access permission. Public videos only.');
       if (/403|forbidden|unexpected response from webpage/i.test(details)) throw new Error('Video website rejected this server request (HTTP 403 / access challenge). Try another public link.');

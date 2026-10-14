@@ -1,10 +1,10 @@
-import { mkdtemp, readFile, writeFile, rm, stat } from 'node:fs/promises';
+import { backgroundForVoice, mixVoiceArgs } from './voice-music.js';
+import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { jingleWav } from './jingle.js';
 const run=promisify(execFile);
 
 // Short English synthesized announcement with an original instrumental background.
@@ -19,15 +19,13 @@ export async function sendAnnouncement(sock,jid,command,msg,options={}) {
  const dir=await mkdtemp(join(tmpdir(),'manuka-announce-'));
  try {
   const text=announcementText(command,process.env.BOT_NAME||'MANUKA-MD');
-  const voice=join(dir,'voice.mp3'), music=join(dir,'theme.wav'), result=join(dir,'reply.ogg');
-  await writeFile(music,jingleWav());
+  const voice=join(dir,'voice.mp3'), result=join(dir,'reply.ogg');
+  const background=await backgroundForVoice(dir);
   await run(options.python||process.env.PYTHON_PATH||'python3',
    [fileURLToPath(new URL('../scripts/tts.py',import.meta.url)),'en',voice,text],
    {timeout:35000,windowsHide:true,maxBuffer:65536});
-  const graph='[0:a]volume=1.5,aecho=0.75:0.8:40:0.16[v];[1:a]volume=0.11[m];[v][m]amix=inputs=2:duration=first:dropout_transition=0[out]';
   await run(options.ffmpeg||process.env.FFMPEG_PATH||'ffmpeg',
-   ['-y','-i',voice,'-stream_loop','-1','-i',music,'-filter_complex',graph,
-    '-map','[out]','-ac','1','-ar','48000','-c:a','libopus','-b:a','40k',result],
+   mixVoiceArgs(voice,background,result),
    {timeout:30000,windowsHide:true,maxBuffer:65536});
   if((await stat(result)).size>2*1024*1024)throw Error('Announcement too large');
   await sock.sendMessage(jid,{audio:await readFile(result),mimetype:'audio/ogg; codecs=opus',ptt:false},{quoted:msg});

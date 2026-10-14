@@ -1,3 +1,5 @@
+import { MultiUserManager } from './multiuser.js';
+import { jidNormalizedUser } from '@whiskeysockets/baileys';
 import { sendVoice } from './voice.js';
 import { FeatureStore } from './features.js';
 import 'dotenv/config';
@@ -9,6 +11,8 @@ import { parseCommand, unwrap, textOf } from './utils.js';
 import { Settings, shouldAutoReply } from './settings.js';
 import { AI } from './ai.js';
 const logger = pino({ level: 'silent' });
+const multiEnabled = process.env.MULTIUSER_ENABLED === 'true' && process.env.MULTIUSER_CHILD !== '1';
+const multi = multiEnabled ? await new MultiUserManager({ max: Math.max(1, Math.min(2, Number(process.env.MULTIUSER_MAX_BOTS || 1))) }).init().then(async()=>{ const m=new MultiUserManager({max:Math.max(1,Math.min(2,Number(process.env.MULTIUSER_MAX_BOTS||1)))});await m.init();return m;}) : null;
 const prefix = process.env.PREFIX || '.';
 if (!prefix.trim()) throw new Error('PREFIX cannot be empty');
 if (!['self','public'].includes(process.env.MODE || 'self')) throw new Error('MODE must be self or public');
@@ -86,6 +90,28 @@ async function connect() {
         }
       }
       const body = unwrap(msg.message), text = textOf(body), parsed = parseCommand(text, prefix);
+      if (multi && parsed && ['pair','approve','listbots','stopbot','startbot','removebot'].includes(parsed.command)) {
+        if (!jid.endsWith('@s.whatsapp.net')) { await sock.sendMessage(jid,{text:'Use a private WhatsApp chat.'}).catch(()=>{}); continue; }
+        try {
+          const cmd=parsed.command,phone=parsed.input.trim();
+          const send=(to,text)=>sock.sendMessage(to,{text});
+          let result;
+          if(cmd==='pair') {
+            if(msg.key.fromMe) throw Error('Pair request must come from the requesting user.');
+            result=await multi.request(jid,phone,notice=>send(jidNormalizedUser(sock.user.id),notice));
+          } else {
+            if(!msg.key.fromMe) throw Error('Only main bot owner can manage users.');
+            if(cmd==='listbots')result=multi.list();
+            else if(!/^\\d{8,15}$/.test(phone))throw Error('Use international digits-only phone number.');
+            else if(cmd==='approve')result=await multi.approve(phone,send);
+            else if(cmd==='stopbot')result=await multi.stop(phone);
+            else if(cmd==='startbot')result=await multi.start(phone,send);
+            else if(cmd==='removebot')result=await multi.remove(phone);
+          }
+          await send(jid,result);
+        } catch(e) { await sock.sendMessage(jid,{text:'⚠️ '+e.message}).catch(()=>{}); }
+        continue;
+      }
       const auto = !parsed && shouldAutoReply(msg, text, settings.data) && !settings.data.pausedChats?.includes(jid);
       if (!auto && (!parsed || (settings.data.mode === 'self' && !msg.key.fromMe))) continue;
       const id = `${jid}:${msg.key.id}`;
@@ -124,6 +150,6 @@ setInterval(() => {
   ai.prune();
   if (settings.data.presenceMode === 'online') current?.sendPresenceUpdate('available').catch(() => {});
 }, 60000).unref();
-function shutdown() { stopping = true; clearTimeout(reconnect); current?.end(new Error('Shutdown')); process.exit(0); }
+function shutdown() { if(multi) for(const child of multi.children.values()) child.kill('SIGTERM'); stopping = true; clearTimeout(reconnect); current?.end(new Error('Shutdown')); process.exit(0); }
 process.on('SIGINT', shutdown); process.on('SIGTERM', shutdown);
 connect().catch(() => { console.error('Startup failed. Check dependencies and auth folder permissions.'); process.exitCode = 1; });

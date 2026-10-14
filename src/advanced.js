@@ -1,3 +1,4 @@
+import { findOpenMovie } from './open-movies.js';
 import { findSong, songCaption } from './music.js';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -55,7 +56,11 @@ export async function handleAdvanced(sock, msg, body, parsed, runtime, key) {
       const link = movie.trackViewUrl && /^https:\/\//.test(movie.trackViewUrl) ? movie.trackViewUrl : '';
       return `${i + 1}. 🎞️ ${name} (${year})\n🎭 ${genre}${link ? `\n🔗 Official: ${link}` : ''}`;
     });
-    await reply(`🎬 MOVIE FINDER | MANUKA-MD\n\n${lines.join('\n\n')}\n\nℹ️ Official catalog links only. Availability depends on region. For authorized direct movie files, use .moviefile HTTPS_URL`);
+    const open = await findOpenMovie(title, runtime.openMovieFetch || fetch);
+    const availability = open
+      ? `\n\n📥 *Authorized full-film download*\n🎞️ ${String(open.title).slice(0,100)}\n🔗 ${open.link}\n📦 ${open.size ? (open.size/1024/1024).toFixed(1)+' MB' : 'Size unknown'}\n⚖️ Verified open-license/public-domain listing. Confirm terms on source page.`
+      : '\n\nℹ️ No verified free full-film file found. Official links above may offer streaming, rental or purchase—not direct downloads.';
+    await reply(`🎬 MOVIE FINDER | MANUKA-MD\n\n${lines.join('\n\n')}${availability}\n\nFor an authorized direct file, use .moviefile HTTPS_URL. File limits apply.`);
     return true;
   }
   if (cmd === 'document') {

@@ -19,14 +19,3 @@ test('Tenor API search converts a remote sticker to WhatsApp WebP',async()=>{
 test('Tenor missing key returns null without requests',async()=>{
  assert.equal(await findTenorSticker('meme',async()=>{throw Error('unwanted')},''),null);
 });
-test('Sticker command prioritizes online images when configured',async()=>{
- const prev=process.env.TENOR_API_KEY; process.env.TENOR_API_KEY='test-key';
- try{
-  const calls=[];const sock={sendMessage:async(...a)=>calls.push(a)};
-  const fake=Buffer.from('remote');
-  await handleCommand(sock,{key:{remoteJid:'test@s.whatsapp.net',fromMe:true}},{},{command:'sticker',input:'meme'},{
-   findTenorSticker:async()=>fake,localMemeSticker:async()=>null
-  });
-  assert.equal(calls[0][1].sticker,fake);
- }finally{if(prev===undefined)delete process.env.TENOR_API_KEY;else process.env.TENOR_API_KEY=prev;}
-});

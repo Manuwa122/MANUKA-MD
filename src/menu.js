@@ -1,102 +1,69 @@
 export function duration(seconds) {
   const n = Math.floor(seconds);
-  return `${Math.floor(n / 3600)}h ${Math.floor(n % 3600 / 60)}m ${n % 60}s`;
-}
+  return `╭━━━〔 ✦ ${name} ✦ 〕━━━╮
+┃  🤖  YOUR SMART WHATSAPP COMPANION
+┃  🟢  ACTIVE  •  V4 PRO  •  ${mode.toUpperCase()}
+┃  👑  ${process.env.OWNER_NAME || 'Manuka Chamath'}
+╰━━━━━━━━━━━━━━━━━━━━━━━╯
 
-export function menuText(mode = 'self') {
-  const p = process.env.PREFIX || '.';
-  const name = process.env.BOT_NAME || 'MANUKA-MD';
-  return `╭── ✦ ${name} ✦ ──╮
-   YOUR NEXT-GEN WHATSAPP COMPANION
-╰──────────────────╯
-🟢 Online • v4.0.0 • ${mode.toUpperCase()}
-👑 ${process.env.OWNER_NAME || 'Manuka Chamath'}
+╭───〔 🤖 AI & VOICE 〕
+│ ◈ ${p}ai <question>
+│ ◈ ${p}aivoice <question>
+│ ◈ ${p}voice si <text>
+│ ◈ ${p}translate / ${p}study <text>
+│ ◈ ${p}resetai
+╰─────────────────────
 
-╭─ 🤖 AI ASSISTANT
-│ ${p}ai <question>
-│ ${p}resetai — clear your AI history
-╰─ Sinhala • Singlish • English
+╭───〔 🎬 MOVIE ZONE 〕
+│ ◈ ${p}movie Avatar
+│ ◈ ${p}movies <film name>
+│ ◈ ${p}file <authorized direct file URL>
+╰─ Official viewing links • legal files ─
 
-╭─ ✨ CREATIVE & STUDY LAB
-│ ${p}explain / ${p}study <topic>
-│ ${p}rewrite / ${p}translate <text>
-│ ${p}summarize <text> — or reply to text
-│ ${p}ideas / ${p}caption <subject>
-╰─ AI tools • Groq or Ollama
+╭───〔 📥 DOWNLOAD STUDIO 〕
+│ ◈ ${p}tiktok <URL>
+│ ◈ ${p}video <URL>  •  ${p}audio <URL>
+│ ◈ ${p}file <direct HTTPS URL>
+│ ◈ ${p}document  (reply to a file)
+╰─ Website restrictions/size limits apply ─
 
-╭─ 🔐 YOUR PERSONAL SPACE (PRIVATE CHAT)
-│ ${p}note add <text> • ${p}note list
-│ ${p}task add <text> • ${p}task done <number>
-│ ${p}expense add 350 lunch • ${p}expense list
-│ ${p}mydata — counts & clear command
-╰─ Notes/tasks/expenses: del <number>
+╭───〔 🎨 CREATOR TOOLS 〕
+│ ◈ ${p}sticker  •  ${p}style <text>
+│ ◈ ${p}caption <topic>
+│ ◈ ${p}ideas <topic>
+│ ◈ ${p}poll Question | Yes | No
+╰─────────────────────
 
-╭─ 🎯 PLAY & CREATE
-│ ${p}quiz • ${p}answer 1 / 2 / 3 (private)
-│ ${p}choose tea | coffee
-│ ${p}poll Question | Yes | No
-│ ${p}style <text>
-╰─ Offline tools • No AI needed
+╭───〔 💬 SMART AUTOMATION 〕
+│ ◈ ${p}autoreact on/off
+│ ◈ ${p}autostatus on/off
+│ ◈ ${p}autoreply on/off
+│ ◈ ${p}autovoice on/off
+│ ◈ ${p}presence online/offline
+╰─ Owner controls ──────
 
-╭─ 🎨 STICKERS
-│ ${p}sticker / ${p}s
-╰─ Reply to an image or video ≤10s
+╭───〔 👥 GROUP & CHAT 〕
+│ ◈ ${p}group open/close
+│ ◈ ${p}welcome on/off
+│ ◈ ${p}kick  •  ${p}promote
+│ ◈ ${p}chat mute 8h / pin / archive
+│ ◈ ${p}channel info <ID>
+╰─────────────────────
 
-╭─ 🎬 MOVIE DISCOVERY
-│ ${p}movie <title> — movie info & official links
-│ ${p}movies <title> — search alternatives
-╰─ Licensed catalog links; country restrictions apply
+╭───〔 🧰 PERSONAL & STUDY 〕
+│ ◈ ${p}quiz  •  ${p}note list
+│ ◈ ${p}task list  •  ${p}expense list
+│ ◈ ${p}bookmark list
+│ ◈ ${p}mydata
+╰─────────────────────
 
-╭─ 📥 DOWNLOADS
-│ ${p}video <URL>
-│ ${p}audio <URL>
-│ ${p}tiktok / ${p}tt <TikTok URL>
-│ ${p}file / ${p}download / ${p}getfile <direct HTTPS URL>\n│ ${p}file <HTTPS URL> | custom-name.ext
-│ ${p}document [filename] — reply to media/file
-╰─ Videos ≤5 min/20MB • Direct files ≤50MB default, configurable to 100MB
+╭───〔 📊 BOT CONTROL 〕
+│ ◈ ${p}alive  •  ${p}ping
+│ ◈ ${p}status  •  ${p}health
+│ ◈ ${p}settings  •  ${p}owner
+╰─────────────────────
 
-╭─ 🎙️ VOICE STUDIO
-│ ${p}voice si / en / ta <text>
-│ ${p}aivoice <question>
-╰─ Google TTS • Python/gTTS/FFmpeg required
-
-╭─ 📌 PERSONAL TOOLBOX (PRIVATE CHAT)
-│ ${p}bookmark add name <URL>
-│ ${p}snippet add name <reply text>
-│ list / get name / del name
-│ ${p}exportdata — your personal JSON
-╰─ Separate storage for each user
-
-╭─ 📰 CHANNEL CONTROL (OWNER)
-│ ${p}channel create Name | Description
-│ ${p}channel info / follow / unfollow <ID>
-│ ${p}channel mute / unmute <ID>
-│ ${p}channel name / desc / post <ID> <text>
-╰─ ID: 123456@newsletter • WhatsApp permissions apply
-
-╭─ 💬 CHAT CONTROL (OWNER)
-│ ${p}chat mute 8h / unmute / pin / unpin
-│ ${p}chat archive / unarchive / read / unread
-│ ${p}autovoice on / off — current private chat
-╰─ Linked account only • Current chat
-
-╭─ 👥 GROUP ADMIN
-│ ${p}group open / close
-│ ${p}subject <name> • ${p}desc <text>
-│ ${p}kick • ${p}promote • ${p}demote
-│ ${p}welcome on / off
-╰─ Sender + bot must be admins
-
-╭─ 👑 OWNER CONTROLS
-│ ${p}mode self / public
-│ ${p}autoreply on / off — current private chat
-│ ${p}autoreact on / off — react to incoming messages
-│ ${p}autostatus on / off — view status updates
-│ ${p}presence online / offline — presence preference
-│ ${p}freezelastseen — privacy settings guide
-│ ${p}settings
-╰─ Commands from linked account only
-
-${p}ping • ${p}status • ${p}health • ${p}owner • ${p}help
-✦ Powered by ${name}`;
+✦ Powered by ${name}
+🌐 https://manuka-md.vercel.app
+_Use only content you may access or download._`;
 }

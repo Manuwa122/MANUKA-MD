@@ -23,5 +23,5 @@ test('keyword sticker command and pack listing work',async()=>{
  await handleCommand(sock,msg,{}, {command:'sticker',input:'meme'});
  assert.ok(Buffer.isBuffer(calls[0][1].sticker));
  await handleCommand(sock,msg,{}, {command:'stickers',input:''});
- assert.match(calls[1][1].text,/156 original stickers/);
+ assert.match(calls[1][1].text,/389 original text stickers/);
 });

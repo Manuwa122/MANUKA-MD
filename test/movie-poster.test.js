@@ -23,7 +23,7 @@ test('movie sends descriptive text instead of a fake image when no art is availa
  openMovieFetch:async()=>({ok:true,json:async()=>({response:{docs:[]}})}),
  posterFetch:async()=>{throw Error('offline');}
  },'user');
- assert.equal(calls.length,1);
+ assert.equal(calls.length,2);
  assert.equal(calls[0][1].image,undefined);
- assert.match(calls[0][1].text,/Real movie poster could not be verified/);
+ assert.match(calls[0][1].text,/Real movie poster unavailable/);
 });

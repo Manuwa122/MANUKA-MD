@@ -44,7 +44,11 @@ export async function handleCommand(sock, msg, body, parsed, runtime = {}) {
       const image = String(imgPath).toLowerCase().endsWith('.svg') ? await sharp(source).png().toBuffer() : source;
       await sock.sendMessage(jid, { image, caption: text }, { quoted: msg });
       if (process.env.MENU_JINGLE !== 'false' && cmd === 'menu') {
-        try { await sock.sendMessage(jid, { audio: jingleWav(), mimetype: 'audio/wav', ptt: false }); } catch { /* menu still delivered */ }
+        const spoken=await sendAnnouncement(sock,jid,'menu',msg);
+        if (!spoken) {
+          try { await sock.sendMessage(jid, { audio: jingleWav(), mimetype: 'audio/wav', ptt: false }); }
+          catch { /* menu text was delivered */ }
+        }
       }
       return;
     } catch { /* text menu remains available if banner is missing */ }

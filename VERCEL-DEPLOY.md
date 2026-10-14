@@ -32,3 +32,19 @@ Never upload `.env`, `auth/`, browser cookies, SSH private keys or personal sess
 ## Media and movie content
 
 Use `.movie <title>` to find catalog entries and official links (regional availability varies). Use `.file <direct public HTTPS URL>` for files you have permission to download. Do not expect unrestricted downloads from streaming services or DRM-protected sources.
+
+## Railway: user-owned bot hosting
+
+The [self-service deploy guide](/deploy.html) includes Railway. On Railway: create a new project, deploy from your own GitHub copy of MANUKA-MD, set **Start Command** to `npm start`, and add a persistent volume mounted at `/data`. Set service Variables:
+
+```dotenv
+AUTH_DIR=/data/auth
+SETTINGS_FILE=/data/settings.json
+FEATURES_FILE=/data/features.json
+AI_PROVIDER=groq
+GROQ_MODEL=openai/gpt-oss-20b
+```
+
+Set `GROQ_API_KEY` privately in Railway Variables. Do not commit credentials. Ensure the runtime can write to the volume and that Node.js is compatible. The bot requires an uninterrupted worker; usage incurs hosting/storage costs. A deployment's logs may show the WhatsApp QR for linking via the user's phone. It is **not** a QR rendered by the Vercel site and may require viewing Railway logs while the session is fresh. The existing repository uses QR by default; website pairing-code support requires a separate authenticated per-user backend and is not yet available. Configure FFmpeg/Python if voice or media features are needed.
+
+Important: Do not connect the same WhatsApp linked session to both EC2 and Railway at once. The self-service wizard does not provision Railway projects by itself.

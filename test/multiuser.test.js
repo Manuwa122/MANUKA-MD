@@ -14,6 +14,8 @@ test('multi-user requests require matching own number; only approved bots launch
   const m=new MultiUserManager({root,spawn,max:1});await m.init();
   await assert.rejects(m.request('94771111111@s.whatsapp.net','94772222222',async()=>{}),/must match/);
   assert.match(await m.request('94771111111@s.whatsapp.net','94771111111',async x=>messages.push(x)),/approval requested/);
+  assert.match(await m.request('107654321098765@lid','94772222222',async x=>messages.push(x)),/approval requested/);
+  assert.match(m.list(),/pending/);
   assert.equal(spawns.length,0);
   assert.match(m.list(),/pending/);
   await m.approve('94771111111',async(to,text)=>messages.push({to,text}));

@@ -30,7 +30,7 @@ export async function handleAdvanced(sock, msg, body, parsed, runtime, key) {
     const song = await findSong(input, runtime.musicFetch || fetch, runtime.musicBrainzFetch || null);
     if (!song) {
       const links=songSearchLinks(input);
-      await reply('🎵 Song metadata not found in available catalogs. සිංහලෙන් හෝ Singlish වලින් ගීතය සොයන්න:\n▶️ YouTube: '+links.youtube+'\n🎧 Spotify: '+links.spotify+'\n🎵 Apple Music: '+links.apple+'\nOfficial results verify කරලා බලන්න.');
+      await reply('🎵 Song metadata not found in available catalogs. සිංහලෙන් හෝ Singlish වලින් ගීතය සොයන්න:\n▶️ YouTube: '+links.youtube+'\n🎶 YouTube Music: '+links.youtubeMusic+'\n🎧 Spotify: '+links.spotify+'\n🎵 Apple Music: '+links.apple+'\nOfficial results verify කරලා බලන්න.');
       return true;
     }
     const caption = songCaption(song);

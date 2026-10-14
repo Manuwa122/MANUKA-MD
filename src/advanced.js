@@ -1,3 +1,4 @@
+import { wikiMovie } from './wiki-movie.js';
 import { movieDetails, watchSearch, communityMovieSearches } from './movie-details.js';
 import { findOpenMovie } from './open-movies.js';
 import { findSong, songCaption } from './music.js';
@@ -51,7 +52,20 @@ export async function handleAdvanced(sock, msg, body, parsed, runtime, key) {
       results = Array.isArray(data.results) ? data.results.filter(x=>x && (x.trackName || x.collectionName)) : [];
     } catch { catalogError = true; }
     const desired=title.toLowerCase();
-    const best=results.find(x=>String(x.trackName||x.collectionName||'').toLowerCase()===desired) || results[0];
+    let best=results.find(x=>String(x.trackName||x.collectionName||'').toLowerCase()===desired) || results[0];
+    // Wikipedia is a free backup for titles absent from the regional iTunes catalog.
+    // Prefer Wikipedia's longer synopsis, language, poster and duration when missing.
+    const missing = !best || !best.artworkUrl100 || !best.trackTimeMillis || !best.language || !(best.longDescription || best.shortDescription);
+    if (missing && !(runtime.movieFetch && !runtime.wikiFetch)) {
+      const wiki = await wikiMovie(title, runtime.wikiFetch || fetch);
+      if (wiki) best = best ? {
+        ...wiki,...best,
+        artworkUrl100:best.artworkUrl100 || wiki.artworkUrl100,
+        trackTimeMillis:best.trackTimeMillis || wiki.trackTimeMillis,
+        language:best.language || wiki.language,
+        longDescription:best.longDescription || best.shortDescription || wiki.longDescription
+      } : wiki;
+    }
     const details=best ? movieDetails(best) : null;
     // Never turn an arbitrary web search result into a purported movie download.
     // A public full-file link is shown only after open-license verification.

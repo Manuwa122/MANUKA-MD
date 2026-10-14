@@ -7,7 +7,7 @@ export function menuText(mode = 'self') {
   const p = process.env.PREFIX || '.';
   const name = process.env.BOT_NAME || 'MANUKA-MD';
   return `╭── ✦ ${name} ✦ ──╮
-   YOUR SMART WHATSAPP ASSISTANT
+   YOUR NEXT-GEN WHATSAPP COMPANION
 ╰──────────────────╯
 🟢 Online • v4.0.0 • ${mode.toUpperCase()}
 👑 ${process.env.OWNER_NAME || 'Manuka Chamath'}
@@ -41,6 +41,11 @@ export function menuText(mode = 'self') {
 ╭─ 🎨 STICKERS
 │ ${p}sticker / ${p}s
 ╰─ Reply to an image or video ≤10s
+
+╭─ 🎬 MOVIE DISCOVERY
+│ ${p}movie <title> — movie info & official links
+│ ${p}movies <title> — search alternatives
+╰─ Licensed catalog links; country restrictions apply
 
 ╭─ 📥 DOWNLOADS
 │ ${p}video <URL>

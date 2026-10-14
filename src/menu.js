@@ -71,6 +71,7 @@ export function menuText(mode = 'self') {
 
 ╭───〔 📊 BOT CONTROL 〕
 │ ◈ ${p}alive  •  ${p}ping
+│ ◈ Robot voice + original background tune
 │ ◈ ${p}poster  — neon photo banner
 │ ◈ ${p}jingle  — original welcome music
 │ ◈ ${p}status  •  ${p}health

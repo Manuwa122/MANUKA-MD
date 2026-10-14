@@ -45,11 +45,11 @@ export class MultiUserManager {
    for(const line of lines){
     const match=line.match(/PRIVATE WHATSAPP PAIRING CODE:\s*([A-Z0-9-]{6,20})/);
     if(match && !delivered){delivered=true;Promise.resolve(send(r.requester,'🔐 Your private MANUKA-MD pairing code: '+match[1]+'\nWhatsApp → Linked devices → Link with phone number. Do not forward.')).catch(()=>{});}
-    else if(!/PAIRING CODE|auth|creds|token|key/i.test(line)) console.log('[Child bot]',line.slice(0,180).replace(/\d{8,15}/g,'[number]'));
+    else if(line.startsWith('PAIR_DIAG ')) console.log('[Child bot]',line.trim().slice(0,180));
    }
    if(buffer.length>4096)buffer=buffer.slice(-1024);
   });
-  c.stderr?.on('data',()=>console.error('[Child bot] An error was reported. Check private diagnostics.'));
+  c.stderr?.on('data',chunk=>{ const lines=String(chunk).split('\n'); for(const line of lines){ if(line.startsWith('PAIR_DIAG ')) console.error('[Child bot]',line.trim().slice(0,180)); } });
   c.on('exit',()=>this.children.delete(r.id));
  }
  async approve(phone,send){return this.serial(async()=>{

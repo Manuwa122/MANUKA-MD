@@ -19,6 +19,28 @@ export async function handleAdvanced(sock, msg, body, parsed, runtime, key) {
   const { command: cmd, input } = parsed;
   const jid = msg.key.remoteJid;
   const reply = text => sock.sendMessage(jid, { text }, { quoted: msg });
+  if (['movie','movies'].includes(cmd)) {
+    const title = input.trim();
+    if (title.length < 2 || title.length > 100) throw new Error('භාවිතය: .movie Movie Name (2–100 characters)');
+    const url = new URL('https://itunes.apple.com/search');
+    url.searchParams.set('term', title);
+    url.searchParams.set('entity', 'movie');
+    url.searchParams.set('limit', '5');
+    const response = await (runtime.movieFetch || fetch)(url, { signal: AbortSignal.timeout(10000) });
+    if (!response.ok) throw new Error('Movie catalog temporarily unavailable.');
+    const data = await response.json();
+    const results = Array.isArray(data.results) ? data.results : [];
+    if (!results.length) { await reply('🎬 Movie not found. Another title try කරන්න.'); return true; }
+    const lines = results.slice(0, 5).map((movie, i) => {
+      const name = String(movie.trackName || 'Unknown').slice(0,120);
+      const year = String(movie.releaseDate || '').slice(0, 4);
+      const genre = String(movie.primaryGenreName || 'Movie').slice(0, 60);
+      const link = movie.trackViewUrl && /^https:\/\//.test(movie.trackViewUrl) ? movie.trackViewUrl : '';
+      return `${i + 1}. 🎞️ ${name} (${year})\\n🎭 ${genre}${link ? `\\n🔗 Official: ${link}` : ''}`;
+    });
+    await reply(`🎬 MOVIE FINDER | MANUKA-MD\\n\\n${lines.join('\\n\\n')}\\n\\nℹ️ Official catalog links only. Availability depends on region. For authorized direct movie files, use .file HTTPS_URL`);
+    return true;
+  }
   if (cmd === 'document') {
     const context = body.extendedTextMessage?.contextInfo || body.imageMessage?.contextInfo || body.videoMessage?.contextInfo || body.documentMessage?.contextInfo;
     const source = unwrap(context?.quotedMessage || body);

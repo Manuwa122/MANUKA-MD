@@ -14,7 +14,7 @@ export class MultiUserManager {
   await mkdir(this.root,{recursive:true,mode:0o700});
   try {
    const rows=JSON.parse(await readFile(join(this.root,'records.json'),'utf8'));
-   for(const r of rows) if(r && valid(r.phone) && r.id===idFor(r.phone) && typeof r.requester==='string' && r.requester.endsWith('@s.whatsapp.net') && ['pending','approved','stopped'].includes(r.status)) this.records.set(r.id,{...r,status:r.status==='approved'?'stopped':r.status});
+   for(const r of rows) if(r && valid(r.phone) && r.id===idFor(r.phone) && typeof r.requester==='string' && /@(s\.whatsapp\.net|lid)$/.test(r.requester) && ['pending','approved','stopped'].includes(r.status)) this.records.set(r.id,{...r,status:r.status==='approved'?'stopped':r.status});
   } catch(e){if(e.code!=='ENOENT') throw e;}
  }
  serial(fn){const p=this.queue.then(fn);this.queue=p.catch(()=>{});return p;}
@@ -23,12 +23,12 @@ export class MultiUserManager {
  list(){return [...this.records.values()].map(r=>r.phone.slice(0,-4).replace(/./g,'*')+r.phone.slice(-4)+' — '+r.status).join('\n')||'No bot requests.';}
  async request(jid,phone,notifyOwner){
   return this.serial(async()=>{
-   if(!valid(phone)||!jid.endsWith('@s.whatsapp.net')||jidPhone(jid)!==phone) throw Error('Pair request: phone must match your WhatsApp number in international digits-only format.');
+   if(!valid(phone)||!/@(s\.whatsapp\.net|lid)$/.test(jid)||(jid.endsWith('@s.whatsapp.net')&&jidPhone(jid)!==phone)) throw Error('Pair request: use your own WhatsApp number with country code (digits only).');
    const id=idFor(phone),old=this.records.get(id);
    if(old && old.requester!==jid) throw Error('Request already exists for this phone.');
    if(old && old.status!=='pending') throw Error('Already approved. Contact owner.');
    this.records.set(id,{id,phone,requester:jid,status:'pending'});await this.save();
-   await notifyOwner('🔐 New MANUKA-MD request: '+phone+'\nApprove from OWNER linked account: .approve '+phone+'\nOnly approve people you trust.');
+   await notifyOwner('🔐 New MANUKA-MD request: '+phone+'\nApprove from OWNER linked account: .approve '+phone+'\nIMPORTANT: for LID chats the requested number cannot be verified automatically. Verify the requester owns that number out-of-band BEFORE approving.');
    return '📨 Owner approval requested. Do not share pairing codes.';
   });
  }

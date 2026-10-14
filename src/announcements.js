@@ -13,6 +13,7 @@ export function announcementText(command, botName='MANUKA-MD') {
  const safe=String(botName).replace(/[^a-zA-Z0-9 -]/g,'').slice(0,35)||'MANUKA MD';
  if(command==='alive'||command==='uptime')return 'Hello! '+safe+' is online and ready to help you. All systems operational.';
  if(command==='ping')return 'Pong! '+safe+' is connected and responding.';
+ if(command==='menu')return 'Welcome to '+safe+'. Your smart WhatsApp companion. Explore AI, music, movies, and more.';
  throw Error('Unsupported announcement');
 }
 export async function sendAnnouncement(sock,jid,command,msg,options={}) {

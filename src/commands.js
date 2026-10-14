@@ -1,3 +1,4 @@
+import { makeSticker, stickerCategories, resolveStickerCategory } from './sticker-pack.js';
 import { sendAnnouncement } from './announcements.js';
 import { jingleWav } from './jingle.js';
 import { handleAdvanced } from './advanced.js';
@@ -114,6 +115,15 @@ export async function handleCommand(sock, msg, body, parsed, runtime = {}) {
   if (cmd === 'ai') {
     if (!input) return reply(`භාවිතය: ${process.env.PREFIX || '.'}ai ඔයාගේ ප්‍රශ්නය`);
     return reply(await ai.answer(memoryKey, input));
+  }
+  if (cmd === 'stickers' || (['sticker','s'].includes(cmd) && String(input||'').trim().toLowerCase() === 'list')) {
+    return reply('🎨 MANUKA-MD STICKER PACK • '+stickerCategories().length*12+' original stickers\\n\\n'+stickerCategories().map(x=>'• .sticker '+x).join('\\n')+'\\n\\nImage/video එකකට reply කරලා .sticker යවන්නත් පුළුවන්.');
+  }
+  if (['sticker','s'].includes(cmd) && String(input||'').trim()) {
+    const category=resolveStickerCategory(input);
+    if (!category) return reply('🎨 ඒ sticker category එක නැහැ. .stickers යවලා available categories බලන්න.');
+    const sticker=await makeSticker(category);
+    return sock.sendMessage(jid,{sticker},{quoted:msg});
   }
   if (['sticker','s'].includes(cmd)) {
     const context = body.extendedTextMessage?.contextInfo || body.imageMessage?.contextInfo || body.videoMessage?.contextInfo;

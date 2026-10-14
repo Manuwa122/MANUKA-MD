@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { movieDetails, watchSearch, movieRuntime } from '../src/movie-details.js';
+import { movieDetails, watchSearch, movieRuntime, communityMovieSearches } from '../src/movie-details.js';
 import { handleAdvanced } from '../src/advanced.js';
 const message={key:{remoteJid:'user@s.whatsapp.net',fromMe:true,id:'movie-test'}};
 test('movie metadata, synopsis and legal search link are formatted',()=>{
@@ -19,4 +19,14 @@ test('movie request still responds with legal-watch search when catalog errors',
  assert.equal(calls.length,1);
  assert.match(calls[0][1].text,/Primary movie catalog temporarily unavailable/);
  assert.match(calls[0][1].text,/google.com\/search/);
+});
+
+test('specific-site searches use requested title, never assert availability',()=>{
+ const links=communityMovieSearches('Avatar');
+ assert.equal(links.length,3);
+ assert.ok(links.every(x=>x.url.includes('Avatar') && x.url.startsWith('https://www.google.com/search?')));
+ assert.ok(links.some(x=>x.domain==='cinemx.lk'));
+});
+test('language metadata appears when catalog supplies it',()=>{
+ assert.match(movieDetails({trackName:'Sample Movie',language:'English'}).caption,/Language: English/);
 });

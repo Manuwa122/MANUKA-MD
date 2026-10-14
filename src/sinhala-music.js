@@ -4,6 +4,7 @@ export function songSearchLinks(term) {
  const q=String(term||'').trim();
  return {
   youtube:'https://www.youtube.com/results?'+new URLSearchParams({search_query:q+' official song'}).toString(),
+  youtubeMusic:'https://music.youtube.com/search?'+new URLSearchParams({q}).toString(),
   spotify:'https://open.spotify.com/search/'+encodeURIComponent(q),
   apple:'https://music.apple.com/lk/search?'+new URLSearchParams({term:q}).toString()
  };

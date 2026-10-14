@@ -35,7 +35,7 @@ async function connect() {
     const digits = process.env.PAIRING_PHONE.replace(/\D/g, '');
     if (!/^\d{8,15}$/.test(digits)) throw new Error('PAIRING_PHONE must be 8–15 digits including country code.');
     sock.ev.on('connection.update', async ({ connection, qr }) => {
-      if (pairingRequested || connection === 'open' || (!qr && connection !== 'connecting')) return;
+      if (pairingRequested || !qr || sock.authState.creds.registered) return;
       pairingRequested = true;
       try {
         const code = await sock.requestPairingCode(digits);

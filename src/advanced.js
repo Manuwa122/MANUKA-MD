@@ -36,9 +36,9 @@ export async function handleAdvanced(sock, msg, body, parsed, runtime, key) {
       const year = String(movie.releaseDate || '').slice(0, 4);
       const genre = String(movie.primaryGenreName || 'Movie').slice(0, 60);
       const link = movie.trackViewUrl && /^https:\/\//.test(movie.trackViewUrl) ? movie.trackViewUrl : '';
-      return `${i + 1}. 🎞️ ${name} (${year})\\n🎭 ${genre}${link ? `\\n🔗 Official: ${link}` : ''}`;
+      return `${i + 1}. 🎞️ ${name} (${year})\n🎭 ${genre}${link ? `\n🔗 Official: ${link}` : ''}`;
     });
-    await reply(`🎬 MOVIE FINDER | MANUKA-MD\\n\\n${lines.join('\\n\\n')}\\n\\nℹ️ Official catalog links only. Availability depends on region. For authorized direct movie files, use .file HTTPS_URL`);
+    await reply(`🎬 MOVIE FINDER | MANUKA-MD\n\n${lines.join('\n\n')}\n\nℹ️ Official catalog links only. Availability depends on region. For authorized direct movie files, use .file HTTPS_URL`);
     return true;
   }
   if (cmd === 'document') {

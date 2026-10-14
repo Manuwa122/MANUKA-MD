@@ -55,7 +55,7 @@ export async function handleAdvanced(sock, msg, body, parsed, runtime, key) {
       const link = movie.trackViewUrl && /^https:\/\//.test(movie.trackViewUrl) ? movie.trackViewUrl : '';
       return `${i + 1}. 🎞️ ${name} (${year})\n🎭 ${genre}${link ? `\n🔗 Official: ${link}` : ''}`;
     });
-    await reply(`🎬 MOVIE FINDER | MANUKA-MD\n\n${lines.join('\n\n')}\n\nℹ️ Official catalog links only. Availability depends on region. For authorized direct movie files, use .file HTTPS_URL`);
+    await reply(`🎬 MOVIE FINDER | MANUKA-MD\n\n${lines.join('\n\n')}\n\nℹ️ Official catalog links only. Availability depends on region. For authorized direct movie files, use .moviefile HTTPS_URL`);
     return true;
   }
   if (cmd === 'document') {
@@ -76,7 +76,7 @@ export async function handleAdvanced(sock, msg, body, parsed, runtime, key) {
     await sock.sendMessage(jid, { document: Buffer.concat(chunks), mimetype: media.mimetype || 'application/octet-stream', fileName: filename }, { quoted: msg });
     return true;
   }
-  if (['file','download','getfile','sendfile'].includes(cmd) || (cmd === 'film' && /^https:\/\//i.test(input))) {
+  if (['file','download','getfile','sendfile','musicfile','songfile','moviefile'].includes(cmd) || (cmd === 'film' && /^https:\/\//i.test(input))) {
     if (!input || input.length > 4000) throw new Error('භාවිතය: .file https://example.com/file.zip | optional-name.zip');
     const [sourceUrl, requestedName, ...extra] = input.split(/\s+\|\s+/);
     if (extra.length || (requestedName !== undefined && (!requestedName.trim() || requestedName.length > 150))) throw new Error('භාවිතය: .file HTTPS_URL | filename.ext');
@@ -86,6 +86,9 @@ export async function handleAdvanced(sock, msg, body, parsed, runtime, key) {
       const limit = Math.max(1, Math.min(100, Number.isFinite(setting) ? setting : 50)) * 1024 * 1024;
       await reply('📥 Downloading file…');
       const path = join(dir, 'file'); const info = await (runtime.fetchFile || fetchFile)(sourceUrl.trim(), path, limit);
+      const ext = String(requestedName || info.filename || '').toLowerCase();
+      if (['musicfile','songfile'].includes(cmd) && !/\.(mp3|m4a|aac|ogg|wav|flac)$/.test(ext)) throw new Error('Song download requires an authorized direct audio file.');
+      if (cmd === 'moviefile' && !/\.(mp4|mkv|webm|mov)$/.test(ext)) throw new Error('Movie download requires an authorized direct video file.');
       await sock.sendMessage(jid, { document: await readFile(path), mimetype: info.mime, fileName: requestedName ? safeFilename(requestedName.trim()) : info.filename, caption: `📦 ${requestedName ? safeFilename(requestedName.trim()) : info.filename} • ${(info.size / 1024 / 1024).toFixed(2)} MB` }, { quoted: msg });
     } finally { await rm(dir, { recursive: true, force: true }); }
     return true;

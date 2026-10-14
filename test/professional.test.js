@@ -32,6 +32,9 @@ test('auto-reply excludes own messages, groups and chats not enabled', () => {
 });
 
 test('AI isolates chat histories, resets and expires memory', async () => {
+  const providerBefore = process.env.AI_PROVIDER;
+  process.env.AI_PROVIDER = 'ollama';
+  try {
   const requests = []; let time = 0;
   const ai = new AI({ clock: () => time, request: async (_, options) => {
     requests.push(JSON.parse(options.body));
@@ -43,6 +46,10 @@ test('AI isolates chat histories, resets and expires memory', async () => {
   ai.clear('a'); await ai.answer('a', 'reset');
   assert.equal(requests[3].messages.length, 2);
   time = 31 * 60 * 1000; ai.prune(); assert.equal(ai.histories.size, 0);
+  } finally {
+    if (providerBefore === undefined) delete process.env.AI_PROVIDER;
+    else process.env.AI_PROVIDER = providerBefore;
+  }
 });
 
 test('owner controls reject incoming commands before writing', async () => {

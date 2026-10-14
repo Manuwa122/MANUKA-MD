@@ -1,3 +1,4 @@
+import { findJamendoTrack } from './jamendo-music.js';
 import { findOwnedSong, sendOwnedSong } from './full-song.js';
 import { songSearchLinks } from './sinhala-music.js';
 import { tmdbMovie } from './tmdb-movie.js';
@@ -34,7 +35,19 @@ export async function handleAdvanced(sock, msg, body, parsed, runtime, key) {
       await (runtime.sendOwnedSong || sendOwnedSong)(sock,jid,msg,owned);
       return true;
     }
-    const song = await findSong(input, runtime.musicFetch || fetch, runtime.musicBrainzFetch || null);
+    // Check explicitly downloadable Jamendo tracks before metadata-only catalogs.
+    const jamendo = await findJamendoTrack(input, runtime.jamendoFetch || fetch, runtime.jamendoClientId ?? process.env.JAMENDO_CLIENT_ID);
+    if (jamendo?.downloadAllowed) {
+      await reply('🎶 '+jamendo.trackName+' — '+jamendo.artistName+'\n📥 Full track download permitted by artist. Sending audio...');
+      try {
+        await (runtime.sendOwnedSong || sendOwnedSong)(sock,jid,msg,{url:jamendo.fullAudioUrl,title:jamendo.trackName,artist:jamendo.artistName,filename:'jamendo-track.mp3'});
+        return true;
+      } catch (error) {
+        console.warn('[music] authorized audio delivery failed:',error?.message || String(error));
+        await reply('⚠️ Full audio could not be delivered. Song details follow.');
+      }
+    }
+    const song = jamendo || await findSong(input, runtime.musicFetch || fetch, runtime.musicBrainzFetch || null);
     if (!song) {
       const links=songSearchLinks(input);
       await reply('🎵 Song metadata not found in available catalogs. සිංහලෙන් හෝ Singlish වලින් ගීතය සොයන්න:\n▶️ YouTube: '+links.youtube+'\n🎶 YouTube Music: '+links.youtubeMusic+'\n🎧 Spotify: '+links.spotify+'\n🎵 Apple Music: '+links.apple+'\nOfficial results verify කරලා බලන්න.');

@@ -124,7 +124,8 @@ export async function handleCommand(sock, msg, body, parsed, runtime = {}) {
   if (['sticker','s'].includes(cmd) && String(input||'').trim()) {
     const category=resolveStickerCategory(input);
     if (!category) return reply('🎨 ඒ sticker category එක නැහැ. .stickers යවලා available categories බලන්න.');
-    const sticker=(category==='meme' ? await (runtime.localMemeSticker||localMemeSticker)() : null) || await makeSticker(category);
+    const sticker=category==='meme' ? await (runtime.localMemeSticker||localMemeSticker)() : await makeSticker(category);
+    if(!sticker) return reply('🖼️ Real meme sticker pack එක තවම server එකේ නැහැ. Emoji.gg එකෙන් භාවිතයට අවසර ඇති PNG/WebP meme stickers download කර STICKER_MEME_DIR folder එකට දාන්න. Text sticker එකක් වෙනුවට නොයවමි.');
     return sock.sendMessage(jid,{sticker},{quoted:msg});
   }
   if (['sticker','s'].includes(cmd)) {

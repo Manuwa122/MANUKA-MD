@@ -23,6 +23,7 @@ test('musicfile accepts an authorized direct audio file and sends document',asyn
 test('moviefile accepts an authorized direct video file',async()=>{
  const c=await run('moviefile','sample.mp4');
  assert.equal(c[1][1].fileName,'sample.mp4');
+ assert.equal(typeof c[1][1].document.url,'string'); // disk-backed file: never buffer a 2GB movie
 });
 test('cross-type or unknown files are rejected',async()=>{
  await assert.rejects(run('musicfile','sample.mp4'),/audio file/);

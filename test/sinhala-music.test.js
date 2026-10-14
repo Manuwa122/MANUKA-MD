@@ -28,3 +28,13 @@ test('MusicBrainz rejects unrelated tracks',async()=>{
  const x=await musicBrainzSong('මැණිකේ මගේ හිතේ',async()=>({ok:true,json:async()=>({recordings:[{title:'Another Track'}]})}));
  assert.equal(x,null);
 });
+
+test('partial Sinhala song titles match catalog recordings',async()=>{
+ const q='මැණිකේ';
+ const result=await findSong(q,async()=>({ok:true,json:async()=>({results:[{trackName:'මැණිකේ මගේ හිතේ',artistName:'Artist Name'}]})}));
+ assert.equal(result.trackName,'මැණිකේ මගේ හිතේ');
+});
+test('YouTube Music fallback preserves Sinhala script',()=>{
+ const link=songSearchLinks('මැණිකේ මගේ හිතේ').youtubeMusic;
+ assert.equal(new URL(link).searchParams.get('q'),'මැණිකේ මගේ හිතේ');
+});

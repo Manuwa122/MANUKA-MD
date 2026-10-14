@@ -103,7 +103,7 @@ async function connect() {
           } else {
             if(!msg.key.fromMe) throw Error('Only main bot owner can manage users.');
             if(cmd==='listbots')result=multi.list();
-            else if(!/^\\d{8,15}$/.test(phone))throw Error('Use international digits-only phone number.');
+            else if(!/^\d{8,15}$/.test(phone))throw Error('Use international digits-only phone number.');
             else if(cmd==='approve')result=await multi.approve(phone,send);
             else if(cmd==='stopbot')result=await multi.stop(phone);
             else if(cmd==='startbot')result=await multi.start(phone,send);

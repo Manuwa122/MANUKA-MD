@@ -35,10 +35,10 @@ export async function handleCommand(sock, msg, body, parsed, runtime = {}) {
   if (await handleAdvanced(sock, msg, body, parsed, { ...runtime, ai }, memoryKey)) return;
   if (await handleFeature(sock, msg, body, parsed, { ...runtime, ai }, memoryKey)) return;
   if (cmd === 'jingle') return sock.sendMessage(jid, { audio: jingleWav(), mimetype: 'audio/wav', ptt: false }, { quoted: msg });
-  if (['menu', 'help'].includes(cmd)) {
-    const text = menuText(runtime.settings?.data.mode || process.env.MODE || 'self');
+  if (['menu', 'help', 'poster'].includes(cmd)) {
+    const text = cmd === 'poster' ? `✦ ${process.env.BOT_NAME || 'MANUKA-MD'} — Your Smart WhatsApp Companion\nType ${(process.env.PREFIX || '.')}menu for the full command list.` : menuText(runtime.settings?.data.mode || process.env.MODE || 'self');
     try {
-      const imgPath = process.env.MENU_IMAGE || new URL('../assets/manuka-md-icon.svg', import.meta.url);
+      const imgPath = process.env.MENU_IMAGE || new URL('../assets/manuka-md-menu-banner.svg', import.meta.url);
       const source = await readFile(imgPath);
       const image = String(imgPath).toLowerCase().endsWith('.svg') ? await sharp(source).png().toBuffer() : source;
       await sock.sendMessage(jid, { image, caption: text }, { quoted: msg });

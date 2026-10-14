@@ -1,3 +1,4 @@
+import { songSearchLinks } from './sinhala-music.js';
 import { tmdbMovie } from './tmdb-movie.js';
 import { moviePoster } from './movie-poster.js';
 import { wikiMovie } from './wiki-movie.js';
@@ -26,8 +27,12 @@ export async function handleAdvanced(sock, msg, body, parsed, runtime, key) {
   const jid = msg.key.remoteJid;
   const reply = text => sock.sendMessage(jid, { text }, { quoted: msg });
   if (cmd === 'song') {
-    const song = await findSong(input, runtime.musicFetch || fetch);
-    if (!song) { await reply('🎵 Song not found. Try song title + artist.'); return true; }
+    const song = await findSong(input, runtime.musicFetch || fetch, runtime.musicBrainzFetch || null);
+    if (!song) {
+      const links=songSearchLinks(input);
+      await reply('🎵 Song metadata not found in available catalogs. සිංහලෙන් හෝ Singlish වලින් ගීතය සොයන්න:\n▶️ YouTube: '+links.youtube+'\n🎧 Spotify: '+links.spotify+'\n🎵 Apple Music: '+links.apple+'\nOfficial results verify කරලා බලන්න.');
+      return true;
+    }
     const caption = songCaption(song);
     const cover = song.artworkUrl100 && /^https:\/\//.test(song.artworkUrl100)
       ? song.artworkUrl100.replace(/100x100bb\.(jpg|png)$/, '600x600bb.$1') : null;

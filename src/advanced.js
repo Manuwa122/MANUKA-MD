@@ -44,7 +44,7 @@ export async function handleAdvanced(sock, msg, body, parsed, runtime, key) {
     const title = String(input || '').trim();
     if (title.length < 2 || title.length > 100) throw new Error('භාවිතය: .movie Movie Name (2–100 characters)');
     const url = new URL('https://itunes.apple.com/search');
-    url.searchParams.set('term',title);url.searchParams.set('entity','movie');url.searchParams.set('limit','5');
+    url.searchParams.set('term',title);url.searchParams.set('entity','movie');url.searchParams.set('country','US');url.searchParams.set('limit','5');
     let results = [], catalogError = false;
     try {
       const response = await (runtime.movieFetch || fetch)(url,{signal:AbortSignal.timeout(8500)});

@@ -30,7 +30,7 @@ export function menuText(mode = 'self') {
 │ ◈ ${p}moviefile <authorized video HTTPS URL>
 │ ◈ ${p}film <authorized direct HTTPS file URL>
 │ ◈ ${p}movies <film name>
-╰─ Official viewing links • legal files ─
+╰─ Verified legal full-film links when found ─
 
 ╭───〔 📥 DOWNLOAD STUDIO 〕
 │ ◈ ${p}tiktok <URL>

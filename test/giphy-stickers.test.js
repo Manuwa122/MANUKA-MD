@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import sharp from 'sharp';
-import { findGiphySticker } from '../src/giphy-stickers.js';
+import { findGiphySticker, findGiphyStickerBatch } from '../src/giphy-stickers.js';
 import { handleCommand } from '../src/commands.js';
 test('GIPHY searches sticker endpoint and converts real image to WebP',async()=>{
  const png=await sharp({create:{width:64,height:64,channels:4,background:'#ffa500'}}).png().toBuffer();
@@ -27,8 +27,9 @@ test('.sticker meme uses GIPHY image before local pack',async()=>{
  const calls=[];const sock={sendMessage:async(...args)=>calls.push(args)};
  const sample=Buffer.from('giphy-mock-image');
  await handleCommand(sock,{key:{remoteJid:'test@s.whatsapp.net',fromMe:true}},{},{command:'sticker',input:'meme'},{
-  findGiphySticker:async()=>sample,
+  findGiphyStickerBatch:async()=>Array(10).fill(sample),
   localMemeSticker:async()=>assert.fail('should not call local pack')
  });
+ assert.equal(calls.length,10);
  assert.equal(calls[0][1].sticker,sample);
 });

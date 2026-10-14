@@ -97,13 +97,13 @@ export async function handleAdvanced(sock, msg, body, parsed, runtime, key) {
     const dir = await mkdtemp(join(tmpdir(), 'manuka-file-'));
     try {
       const setting = Number(process.env.MAX_FILE_MB || 50);
-      const limit = Math.max(1, Math.min(100, Number.isFinite(setting) ? setting : 50)) * 1024 * 1024;
+      const limit = Math.max(1, Math.min(2048, Number.isFinite(setting) ? setting : 50)) * 1024 * 1024;
       await reply('📥 Downloading file…');
       const path = join(dir, 'file'); const info = await (runtime.fetchFile || fetchFile)(sourceUrl.trim(), path, limit);
       const ext = String(requestedName || info.filename || '').toLowerCase();
       if (['musicfile','songfile'].includes(cmd) && !/\.(mp3|m4a|aac|ogg|wav|flac)$/.test(ext)) throw new Error('Song download requires an authorized direct audio file.');
       if (cmd === 'moviefile' && !/\.(mp4|mkv|webm|mov)$/.test(ext)) throw new Error('Movie download requires an authorized direct video file.');
-      await sock.sendMessage(jid, { document: await readFile(path), mimetype: info.mime, fileName: requestedName ? safeFilename(requestedName.trim()) : info.filename, caption: `📦 ${requestedName ? safeFilename(requestedName.trim()) : info.filename} • ${(info.size / 1024 / 1024).toFixed(2)} MB` }, { quoted: msg });
+      await sock.sendMessage(jid, { document: { url: path }, mimetype: info.mime, fileName: requestedName ? safeFilename(requestedName.trim()) : info.filename, caption: `📦 ${requestedName ? safeFilename(requestedName.trim()) : info.filename} • ${(info.size / 1024 / 1024).toFixed(2)} MB` }, { quoted: msg });
     } finally { await rm(dir, { recursive: true, force: true }); }
     return true;
   }

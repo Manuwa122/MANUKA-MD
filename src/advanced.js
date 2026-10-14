@@ -84,7 +84,8 @@ export async function handleAdvanced(sock, msg, body, parsed, runtime, key) {
       ? [art.replace(/100x100bb\.(jpg|png)$/,'600x600bb.$1'),art] : [];
     try {
       const image = await moviePoster(details?.title || title, details?.year || '', preferred, runtime.posterFetch || fetch);
-      await sock.sendMessage(jid,{image,caption},{quoted:msg});
+      if (image) await sock.sendMessage(jid,{image,caption},{quoted:msg});
+      else await reply(caption+'\n🖼️ Real movie poster could not be verified from available sources.');
     } catch {
       // Do not suppress the movie information if media delivery fails.
       await reply(caption+'\n🖼️ Poster delivery failed. Check server logs.');

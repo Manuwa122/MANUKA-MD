@@ -84,12 +84,24 @@ export async function handleAdvanced(sock, msg, body, parsed, runtime, key) {
       ? [art.replace(/100x100bb\.(jpg|png)$/,'600x600bb.$1'),art] : [];
     try {
       const image = await moviePoster(details?.title || title, details?.year || '', preferred, runtime.posterFetch || fetch);
-      if (image) await sock.sendMessage(jid,{image,caption},{quoted:msg});
-      else await reply(caption+'\n🖼️ Real movie poster could not be verified from available sources.');
-    } catch {
-      // Do not suppress the movie information if media delivery fails.
-      await reply(caption+'\n🖼️ Poster delivery failed. Check server logs.');
+      if (image) {
+        // WhatsApp image captions have a much smaller safe size than the full
+        // movie listing. Send media separately so the long list of links
+        // cannot break photo delivery.
+        try {
+          await sock.sendMessage(jid,{image,caption:'🎬 '+String(details?.title || title).slice(0,110)+'\n🖼️ Movie poster'},{quoted:msg});
+        } catch (error) {
+          console.warn('[movie] poster upload failed:',error?.message || String(error));
+          await reply('🖼️ Poster upload failed; movie information follows.');
+        }
+      } else {
+        await reply('🖼️ Real movie poster unavailable from the current sources.');
+      }
+    } catch (error) {
+      console.warn('[movie] poster lookup failed:',error?.message || String(error));
+      await reply('🖼️ Poster lookup failed; movie information follows.');
     }
+    await reply(caption);
     return true;
   }
   if (cmd === 'document') {

@@ -40,7 +40,7 @@ export function menuText(mode = 'self') {
 ╰─ Website restrictions/size limits apply ─
 
 ╭───〔 🎨 CREATOR TOOLS 〕
-│ ◈ ${p}sticker  •  ${p}style <text>
+│ ◈ ${p}sticker meme/love/funny  •  ${p}stickers\n│ ◈ ${p}sticker (reply to image/video)
 │ ◈ ${p}caption <topic>
 │ ◈ ${p}ideas <topic>
 │ ◈ ${p}poll Question | Yes | No

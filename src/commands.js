@@ -60,6 +60,20 @@ export async function handleCommand(sock, msg, body, parsed, runtime = {}) {
     await runtime.settings.update(data => { data.autoChats = setMembership(data.autoChats, jid, input === 'on'); });
     return reply(`🤖 AI auto-reply ${input.toUpperCase()} — මේ chat එක සඳහා. Replies AI විසින් ජනනය කරයි.`);
   }
+  if (['autoreact','autostatus','presence','freezelastseen'].includes(cmd)) {
+    if (!msg.key.fromMe) throw new Error('Owner command: linked account එකෙන් යවන්න.');
+    if (!runtime.settings) throw new Error('Settings unavailable. Restart bot.');
+    if (cmd === 'freezelastseen') return reply('🕶️ Last seen privacy: WhatsApp Settings → Privacy → Last seen and online → Nobody / Same as last seen. Bot එකට server-side last seen freeze සහතික කළ නොහැක. ${process.env.PREFIX || '.'}presence offline භාවිත කරන්න.');
+    if (cmd === 'presence') {
+      if (!['online','offline'].includes(input)) throw new Error('භාවිතය: .presence online / offline');
+      await runtime.settings.update(data => { data.presenceMode = input; });
+      if (typeof sock.sendPresenceUpdate === 'function') await sock.sendPresenceUpdate(input === 'online' ? 'available' : 'unavailable').catch(() => {});
+      return reply('👁 Presence preference: ' + input + ' ✅ (WhatsApp may not display this consistently.)');
+    }
+    if (!['on','off'].includes(input)) throw new Error('භාවිතය: .' + cmd + ' on / off');
+    await runtime.settings.update(data => { data[cmd === 'autoreact' ? 'autoReact' : 'autoStatusView'] = input === 'on'; });
+    return reply((cmd === 'autoreact' ? '💖 Auto reactions' : '👀 Auto status views') + ': ' + input.toUpperCase() + ' ✅');
+  }
   if (cmd === 'ai') {
     if (!input) return reply(`භාවිතය: ${process.env.PREFIX || '.'}ai ඔයාගේ ප්‍රශ්නය`);
     return reply(await ai.answer(memoryKey, input));

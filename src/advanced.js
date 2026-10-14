@@ -1,3 +1,4 @@
+import { moviePoster } from './movie-poster.js';
 import { wikiMovie } from './wiki-movie.js';
 import { movieDetails, watchSearch, communityMovieSearches } from './movie-details.js';
 import { findOpenMovie } from './open-movies.js';
@@ -79,11 +80,15 @@ export async function handleAdvanced(sock, msg, body, parsed, runtime, key) {
       (alternatives ? '\n\n🎞️ Similar matches:\n'+alternatives : '')+legalLink+search+community+
       (catalogError ? '\n⚠️ Primary movie catalog temporarily unavailable.' : '');
     const art=best?.artworkUrl100;
-    if (typeof art === 'string' && /^https:\/\//.test(art)) {
-      try {
-        await sock.sendMessage(jid,{image:{url:art.replace(/100x100bb\.(jpg|png)$/,'600x600bb.$1')},caption},{quoted:msg});
-      } catch { await reply(caption); }
-    } else await reply(caption);
+    const preferred = typeof art==='string' && /^https:\/\//.test(art)
+      ? [art.replace(/100x100bb\.(jpg|png)$/,'600x600bb.$1'),art] : [];
+    try {
+      const image = await moviePoster(details?.title || title, details?.year || '', preferred, runtime.posterFetch || fetch);
+      await sock.sendMessage(jid,{image,caption},{quoted:msg});
+    } catch {
+      // Do not suppress the movie information if media delivery fails.
+      await reply(caption+'\n🖼️ Poster delivery failed. Check server logs.');
+    }
     return true;
   }
   if (cmd === 'document') {

@@ -1,4 +1,4 @@
-import { findGiphySticker } from './giphy-stickers.js';
+import { findGiphyStickerBatch } from './giphy-stickers.js';
 import { STICKER_PACK } from './sticker-pack.js';
 import { localMemeSticker } from './local-meme-stickers.js';
 import { makeSticker, stickerCategories, resolveStickerCategory } from './sticker-pack.js';
@@ -125,14 +125,29 @@ export async function handleCommand(sock, msg, body, parsed, runtime = {}) {
   if (['sticker','s'].includes(cmd) && String(input||'').trim()) {
     const category=resolveStickerCategory(input);
     if (!category) return reply('🎨 ඒ sticker category එක නැහැ. .stickers යවලා available categories බලන්න.');
-    let sticker=null;
-    if((process.env.GIPHY_API_KEY || runtime.findGiphySticker) && process.env.STICKER_ONLINE !== 'false') {
-      try { sticker=await (runtime.findGiphySticker||findGiphySticker)(category==='sinhala'?'sinhala reaction':category); }
+    let stickers=[];
+    if((process.env.GIPHY_API_KEY || runtime.findGiphyStickerBatch) && process.env.STICKER_ONLINE !== 'false') {
+      try { stickers=await (runtime.findGiphyStickerBatch||findGiphyStickerBatch)(category==='sinhala'?'sinhala reaction':category); }
       catch(error) { console.warn('[stickers] Online search unavailable:',String(error?.message||error).slice(0,120)); }
     }
-    sticker ||= category==='meme' ? await (runtime.localMemeSticker||localMemeSticker)() : await makeSticker(category);
-    if(!sticker) return reply('🖼️ Real meme sticker නැහැ. GIPHY_API_KEY එක configure කරන්න හෝ STICKER_MEME_DIR එකට sticker images දාන්න.');
-    return sock.sendMessage(jid,{sticker},{quoted:msg});
+    if(!Array.isArray(stickers))stickers=[];
+    if(category==='meme' && stickers.length===0) {
+      for(let i=0;i<10;i++){
+        const local=await (runtime.localMemeSticker||localMemeSticker)();
+        if(!local)break;
+        stickers.push(local);
+      }
+    }
+    if(category!=='meme')while(stickers.length<10)stickers.push(await makeSticker(category));
+    if(!stickers.length)return reply('🖼️ Real meme stickers නැහැ. GIPHY_API_KEY configure කරන්න හෝ STICKER_MEME_DIR එකට images දාන්න.');
+    let delivered=0;
+    for(const sticker of stickers.slice(0,10)) {
+      try { await sock.sendMessage(jid,{sticker},{quoted:msg}); delivered++; }
+      catch(error) { console.warn('[stickers] sticker send failed:',String(error?.message||error).slice(0,100)); }
+    }
+    if(!delivered)return reply('⚠️ Stickers WhatsApp එකට යවන්න බැරි වුණා. නැවත උත්සාහ කරන්න.');
+    return;
+
   }
   if (['sticker','s'].includes(cmd)) {
     const context = body.extendedTextMessage?.contextInfo || body.imageMessage?.contextInfo || body.videoMessage?.contextInfo;

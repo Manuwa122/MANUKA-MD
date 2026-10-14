@@ -1,3 +1,5 @@
+> 🔐 **Source code notice:** Original MANUKA-MD code is copyright © 2026 Alankarayalage Manuka Chamath Kumara, all rights reserved. Public visibility does not authorize running, copying, modifying, or redistributing the original code without written permission. Third-party components retain their own licenses. See [LICENSE](LICENSE).
+
 <div align="center">
 
 <img src="https://capsule-render.vercel.app/api?type=waving&color=0:020617,45:1d4ed8,100:06b6d4&height=235&section=header&text=MANUKA-MD&fontSize=64&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=THE%20NEXT%20GEN%20WHATSAPP%20ASSISTANT&descSize=19&descAlignY=61" alt="MANUKA-MD — The next generation WhatsApp assistant" width="100%" />

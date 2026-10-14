@@ -14,7 +14,7 @@ test('movie metadata, synopsis and legal search link are formatted',()=>{
 test('movie request still responds with legal-watch search when catalog errors',async()=>{
  const calls=[];const sock={sendMessage:async(...args)=>calls.push(args)};
  await handleAdvanced(sock,message,{}, {command:'movie',input:'A Movie Name'},{
-  movieFetch:async()=>{throw Error('blocked');}
+  movieFetch:async()=>{throw Error('blocked');},posterFetch:async()=>{throw Error('offline');}
  },'user');
  assert.equal(calls.length,1);
  assert.match(calls[0][1].text,/Primary movie catalog temporarily unavailable/);

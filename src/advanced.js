@@ -1,3 +1,4 @@
+import { findSong, songCaption } from './music.js';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -19,6 +20,22 @@ export async function handleAdvanced(sock, msg, body, parsed, runtime, key) {
   const { command: cmd, input } = parsed;
   const jid = msg.key.remoteJid;
   const reply = text => sock.sendMessage(jid, { text }, { quoted: msg });
+  if (cmd === 'song') {
+    const song = await findSong(input, runtime.musicFetch || fetch);
+    if (!song) { await reply('🎵 Song not found. Try song title + artist.'); return true; }
+    const caption = songCaption(song);
+    const cover = song.artworkUrl100 && /^https:\/\//.test(song.artworkUrl100)
+      ? song.artworkUrl100.replace(/100x100bb\.(jpg|png)$/, '600x600bb.$1') : null;
+    if (cover) {
+      try { await sock.sendMessage(jid, { image: { url: cover }, caption }, { quoted: msg }); }
+      catch { await reply(caption); }
+    } else await reply(caption);
+    if (song.previewUrl && /^https:\/\//.test(song.previewUrl)) {
+      try { await sock.sendMessage(jid, { audio: { url: song.previewUrl }, mimetype: 'audio/mp4', ptt: false }, { quoted: msg }); }
+      catch { await reply('🎧 Preview could not be delivered. Open the official listening link above.'); }
+    }
+    return true;
+  }
   if (['movie','movies'].includes(cmd) || (cmd === 'film' && !/^https:\/\//i.test(input))) {
     const title = input.trim();
     if (title.length < 2 || title.length > 100) throw new Error('භාවිතය: .movie Movie Name (2–100 characters)');

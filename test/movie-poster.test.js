@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import sharp from 'sharp';
-import { moviePoster, commonsPosterUrls } from '../src/movie-poster.js';
+import { moviePoster, commonsPosterUrls, wikipediaPosterUrls } from '../src/movie-poster.js';
 import { handleAdvanced } from '../src/advanced.js';
 
 test('never substitutes an invented poster when all sources fail',async()=>{
@@ -26,4 +26,11 @@ test('movie sends descriptive text instead of a fake image when no art is availa
  assert.equal(calls.length,2);
  assert.equal(calls[0][1].image,undefined);
  assert.match(calls[0][1].text,/Real movie poster unavailable/);
+});
+
+test('Wikipedia REST summary poster search returns matching movie artwork',async()=>{
+ const urls=await wikipediaPosterUrls('Avatar','2009',async url=>({
+  ok:true,json:async()=>({title:'Avatar (2009 film)',originalimage:{source:'https://upload.wikimedia.org/example.jpg'}})
+ }));
+ assert.deepEqual(urls,['https://upload.wikimedia.org/example.jpg','https://upload.wikimedia.org/example.jpg']);
 });

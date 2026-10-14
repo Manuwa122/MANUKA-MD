@@ -90,10 +90,16 @@ test('bookmarks/snippets persist per user; export excludes another user; clear d
  } finally {await rm(dir,{recursive:true,force:true});}
 });
 test('file command delivers document and removes temporary downloads even after failure', async () => {
- const sock=mock(); let path;
+ const sock=mock(); let path, streamedBytes;
+ const originalSend=sock.sendMessage;
+ sock.sendMessage=async (...args)=>{
+  if (args[1]?.document?.url) streamedBytes=await readFile(args[1].document.url,'utf8');
+  return originalSend(...args);
+ };
  const runtime={fetchFile:async (_url,p)=>{path=p;await writeFile(p,'file bytes');return {filename:'a.zip',mime:'application/zip',size:10};}};
  await run(sock,'file','https://example.com/a.zip',runtime);
- assert.equal(sock.calls.at(-1)[1].document.toString(),'file bytes');
+ assert.equal(streamedBytes,'file bytes');
+ assert.equal(sock.calls.at(-1)[1].document.url,path);
  assert.equal(sock.calls.at(-1)[1].fileName,'a.zip'); await assert.rejects(access(dirname(path)));
  runtime.fetchFile=async(_url,p)=>{path=p;await writeFile(p,'partial');throw new Error('Download failed');};
  await assert.rejects(run(sock,'file','https://example.com/a.zip',runtime),/Download/); await assert.rejects(access(dirname(path)));

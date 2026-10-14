@@ -1,4 +1,4 @@
-import { findTenorSticker } from './tenor-stickers.js';
+import { findGiphySticker } from './giphy-stickers.js';
 import { STICKER_PACK } from './sticker-pack.js';
 import { localMemeSticker } from './local-meme-stickers.js';
 import { makeSticker, stickerCategories, resolveStickerCategory } from './sticker-pack.js';
@@ -126,12 +126,12 @@ export async function handleCommand(sock, msg, body, parsed, runtime = {}) {
     const category=resolveStickerCategory(input);
     if (!category) return reply('🎨 ඒ sticker category එක නැහැ. .stickers යවලා available categories බලන්න.');
     let sticker=null;
-    if(process.env.TENOR_API_KEY && process.env.STICKER_ONLINE !== 'false') {
-      try { sticker=await (runtime.findTenorSticker||findTenorSticker)(category==='sinhala'?'sinhala reaction':category); }
+    if((process.env.GIPHY_API_KEY || runtime.findGiphySticker) && process.env.STICKER_ONLINE !== 'false') {
+      try { sticker=await (runtime.findGiphySticker||findGiphySticker)(category==='sinhala'?'sinhala reaction':category); }
       catch(error) { console.warn('[stickers] Online search unavailable:',String(error?.message||error).slice(0,120)); }
     }
     sticker ||= category==='meme' ? await (runtime.localMemeSticker||localMemeSticker)() : await makeSticker(category);
-    if(!sticker) return reply('🖼️ Real meme sticker නැහැ. TENOR_API_KEY එක configure කරන්න හෝ STICKER_MEME_DIR එකට sticker images දාන්න.');
+    if(!sticker) return reply('🖼️ Real meme sticker නැහැ. GIPHY_API_KEY එක configure කරන්න හෝ STICKER_MEME_DIR එකට sticker images දාන්න.');
     return sock.sendMessage(jid,{sticker},{quoted:msg});
   }
   if (['sticker','s'].includes(cmd)) {

@@ -24,9 +24,25 @@ async function connect() {
   const { state, saveCreds } = await useMultiFileAuthState(process.env.AUTH_DIR || './auth');
   const sock = makeWASocket({ logger, auth: { creds: state.creds, keys: makeCacheableSignalKeyStore(state.keys, logger) }, markOnlineOnConnect: false, syncFullHistory: false });
   current = sock;
+  // Owner-controlled pairing-code mode. Never expose a pairing code on a public website.
+  let pairingRequested = false;
+  if (!state.creds.registered && process.env.PAIRING_PHONE) {
+    const digits = process.env.PAIRING_PHONE.replace(/\D/g, '');
+    if (!/^\d{8,15}$/.test(digits)) throw new Error('PAIRING_PHONE must be 8–15 digits including country code.');
+    sock.ev.on('connection.update', async ({ connection, qr }) => {
+      if (pairingRequested || connection === 'open' || (!qr && connection !== 'connecting')) return;
+      pairingRequested = true;
+      try {
+        const code = await sock.requestPairingCode(digits);
+        console.log('PRIVATE WHATSAPP PAIRING CODE:', code, '(read from your own host logs only)');
+      } catch {
+        console.error('Pairing-code request failed. Use the QR in your private host logs.');
+      }
+    });
+  }
   sock.ev.on('creds.update', () => saveCreds().catch(() => console.error('Session save failed. Check disk permissions.')));
   sock.ev.on('connection.update', ({ connection, lastDisconnect, qr }) => {
-    if (qr) { console.log('WhatsApp > Linked devices > Link a device'); qrcode.generate(qr, { small: true }); }
+    if (qr && !process.env.PAIRING_PHONE) { console.log('WhatsApp > Linked devices > Link a device'); qrcode.generate(qr, { small: true }); }
     if (connection === 'open') { reconnectAttempts = 0; sock.sendPresenceUpdate(settings.data.presenceMode === 'online' ? 'available' : 'unavailable').catch(() => {}); console.log(`${process.env.BOT_NAME || 'MANUKA-MD'} connected. Send ${prefix}menu`); }
     if (connection === 'close' && !stopping) {
       const code = lastDisconnect?.error?.output?.statusCode;

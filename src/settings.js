@@ -4,14 +4,14 @@ import { dirname } from 'node:path';
 export class Settings {
   constructor(path = process.env.SETTINGS_FILE || './data/settings.json') {
     this.path = path;
-    this.data = { mode: process.env.MODE || 'self', autoChats: [], welcomeGroups: [], autoVoiceChats: [] };
+    this.data = { mode: process.env.MODE || 'self', autoChats: [], welcomeGroups: [], autoVoiceChats: [], autoReact: false, autoStatusView: false, presenceMode: 'offline' };
     this.pending = Promise.resolve();
   }
   async load() {
     try {
       const data = JSON.parse(await readFile(this.path, 'utf8'));
       if (!['self', 'public'].includes(data.mode) || !Array.isArray(data.autoChats) || !Array.isArray(data.welcomeGroups)) throw new Error('Invalid settings');
-      this.data = { mode: data.mode, autoChats: data.autoChats.filter(x => typeof x === 'string'), welcomeGroups: data.welcomeGroups.filter(x => typeof x === 'string'), autoVoiceChats: (Array.isArray(data.autoVoiceChats) ? data.autoVoiceChats : []).filter(x => typeof x === 'string') };
+      this.data = { mode: data.mode, autoChats: data.autoChats.filter(x => typeof x === 'string'), welcomeGroups: data.welcomeGroups.filter(x => typeof x === 'string'), autoVoiceChats: (Array.isArray(data.autoVoiceChats) ? data.autoVoiceChats : []).filter(x => typeof x === 'string'), autoReact: data.autoReact === true, autoStatusView: data.autoStatusView === true, presenceMode: ['offline','online'].includes(data.presenceMode) ? data.presenceMode : 'offline' };
     } catch (error) { if (error.code !== 'ENOENT') throw error; }
     return this;
   }

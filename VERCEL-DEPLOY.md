@@ -48,3 +48,13 @@ GROQ_MODEL=openai/gpt-oss-20b
 Set `GROQ_API_KEY` privately in Railway Variables. Do not commit credentials. Ensure the runtime can write to the volume and that Node.js is compatible. The bot requires an uninterrupted worker; usage incurs hosting/storage costs. A deployment's logs may show the WhatsApp QR for linking via the user's phone. It is **not** a QR rendered by the Vercel site and may require viewing Railway logs while the session is fresh. The existing repository uses QR by default; website pairing-code support requires a separate authenticated per-user backend and is not yet available. Configure FFmpeg/Python if voice or media features are needed.
 
 Important: Do not connect the same WhatsApp linked session to both EC2 and Railway at once. The self-service wizard does not provision Railway projects by itself.
+
+## QR and phone pairing on each user's own Railway service
+
+QR mode (default): leave `PAIRING_PHONE` unset. During first startup, the private Railway service logs show the QR for WhatsApp → Linked devices → Link a device. Keep the logs private.
+
+Phone pairing mode (optional): set `PAIRING_PHONE` as the user's own number in international digits-only format (e.g. `947XXXXXXXX`) in Railway service Variables. With a new empty authentication volume, the bot calls Baileys `requestPairingCode` and prints `PRIVATE WHATSAPP PAIRING CODE` to the private service logs. Enter it through WhatsApp's **Link with phone number** flow. Only the WhatsApp account holder should perform linking. The bot does not issue codes from the Vercel website.
+
+The bot worker must have writable persistent storage mounted at `/data`, with `AUTH_DIR=/data/auth` and `SETTINGS_FILE=/data/settings.json`. Each user deploys to their own Railway project: never share auth directories between users or connect one session simultaneously on multiple hosts. Pairing codes expire, are sensitive credentials, and must not be sent in chats or stored in publicly accessible logs.
+
+**One-click template publication:** Railway's actual [Deploy on Railway](https://docs.railway.com/templates/publish-and-share) button needs a published Railway template ID. Until a template is created and published in the maintainer's Railway workspace, the wizard links to Railway's new-project flow and cannot provision bot deployments automatically.

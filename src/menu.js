@@ -22,10 +22,12 @@ export function menuText(mode = 'self') {
 
 ╭───〔 🎶 MUSIC PLAYER 〕
 │ ◈ ${p}song <title or singer>
+│ ◈ ${p}musicfile <authorized audio HTTPS URL>
 ╰─ Cover • Artist • Duration • Preview ─
 
 ╭───〔 🎬 MOVIE ZONE 〕
 │ ◈ ${p}movie Avatar  •  ${p}film Avatar
+│ ◈ ${p}moviefile <authorized video HTTPS URL>
 │ ◈ ${p}film <authorized direct HTTPS file URL>
 │ ◈ ${p}movies <film name>
 ╰─ Official viewing links • legal files ─

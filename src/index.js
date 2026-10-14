@@ -36,12 +36,14 @@ async function connect() {
     if (!/^\d{8,15}$/.test(digits)) throw new Error('PAIRING_PHONE must be 8–15 digits including country code.');
     sock.ev.on('connection.update', async ({ connection, qr }) => {
       if (pairingRequested || !qr || sock.authState.creds.registered) return;
+      console.log('PAIR_DIAG qr_ready');
       pairingRequested = true;
       try {
         const code = await sock.requestPairingCode(digits);
         console.log('PRIVATE WHATSAPP PAIRING CODE:', code, '(read from your own host logs only)');
-      } catch {
-        console.error('Pairing-code request failed. Use the QR in your private host logs.');
+      } catch (error) {
+        const status = Number(error?.output?.statusCode || 0);
+        console.error('PAIR_DIAG request_failed status=' + (status || 'unknown') + ' name=' + String(error?.name || 'Error').slice(0,40));
       }
     });
   }
@@ -51,6 +53,7 @@ async function connect() {
     if (connection === 'open') { reconnectAttempts = 0; sock.sendPresenceUpdate(settings.data.presenceMode === 'online' ? 'available' : 'unavailable').catch(() => {}); console.log(`${process.env.BOT_NAME || 'MANUKA-MD'} connected. Send ${prefix}menu`); }
     if (connection === 'close' && !stopping) {
       const code = lastDisconnect?.error?.output?.statusCode;
+      if (process.env.MULTIUSER_CHILD === '1') console.log('PAIR_DIAG connection_closed status=' + (Number(code) || 'unknown'));
       if ([DisconnectReason.loggedOut, DisconnectReason.badSession, DisconnectReason.connectionReplaced].includes(code)) {
         console.log('Session ended. Check Linked devices; for logout, remove auth folder and restart to scan QR.');
       } else {

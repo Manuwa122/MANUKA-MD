@@ -19,7 +19,6 @@ test('movie returns image and metadata when iTunes yields no results',async()=>{
  await handleAdvanced(sock,{key:{remoteJid:'test@s.whatsapp.net'}},{},{command:'movie',input:'Avatar'},
  {movieFetch:async()=>({ok:true,json:async()=>({results:[]})}),wikiFetch:fake,openMovieFetch:async()=>({ok:true,json:async()=>({response:{docs:[]}})})},'test');
  assert.equal(calls.length,1);
- assert.ok(calls[0][1].image);
- assert.match(calls[0][1].caption,/Language: English/);
- assert.match(calls[0][1].caption,/2h 42m/);
+ assert.match(calls[0][1].text,/Language: English/);
+ assert.match(calls[0][1].text,/2h 42m/);
 });

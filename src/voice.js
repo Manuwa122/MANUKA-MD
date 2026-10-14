@@ -1,3 +1,4 @@
+import { backgroundForVoice, mixVoiceArgs } from './voice-music.js';
 import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -11,7 +12,8 @@ export async function sendVoice(sock, jid, text, quoted, language = process.env.
   try {
     const mp3 = join(dir, 'voice.mp3'), ogg = join(dir, 'voice.ogg');
     await run(process.env.PYTHON_PATH || (process.platform === 'win32' ? 'python' : 'python3'), [fileURLToPath(new URL('../scripts/tts.py', import.meta.url)), language, mp3, text], { timeout: 60000, windowsHide: true, maxBuffer: 65536 });
-    await run(process.env.FFMPEG_PATH || 'ffmpeg', ['-y','-i',mp3,'-c:a','libopus','-b:a','32k','-ac','1','-ar','48000',ogg], { timeout: 30000, windowsHide: true, maxBuffer: 65536 });
+    const music=await backgroundForVoice(dir);
+    await run(process.env.FFMPEG_PATH || 'ffmpeg', mixVoiceArgs(mp3,music,ogg), { timeout: 30000, windowsHide: true, maxBuffer: 65536 });
     if ((await stat(ogg)).size > 5 * 1024 * 1024) throw new Error('Voice command: generated voice is too large.');
     await sock.sendMessage(jid, { audio: await readFile(ogg), mimetype: 'audio/ogg; codecs=opus', ptt: true }, quoted ? { quoted } : {});
   } catch { throw new Error('Voice command failed: Python + gTTS + FFmpeg සහ internet connection බලන්න. Text reply සඳහා .ai භාවිත කරන්න.'); }

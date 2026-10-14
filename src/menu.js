@@ -20,6 +20,10 @@ export function menuText(mode = 'self') {
 │ ◈ ${p}resetai
 ╰─────────────────────
 
+╭───〔 🎶 MUSIC PLAYER 〕
+│ ◈ ${p}song <title or singer>
+╰─ Cover • Artist • Duration • Preview ─
+
 ╭───〔 🎬 MOVIE ZONE 〕
 │ ◈ ${p}movie Avatar  •  ${p}film Avatar
 │ ◈ ${p}film <authorized direct HTTPS file URL>

@@ -1,3 +1,4 @@
+import { findOwnedSong, sendOwnedSong } from './full-song.js';
 import { songSearchLinks } from './sinhala-music.js';
 import { tmdbMovie } from './tmdb-movie.js';
 import { moviePoster } from './movie-poster.js';
@@ -27,6 +28,12 @@ export async function handleAdvanced(sock, msg, body, parsed, runtime, key) {
   const jid = msg.key.remoteJid;
   const reply = text => sock.sendMessage(jid, { text }, { quoted: msg });
   if (cmd === 'song') {
+    const owned = await (runtime.findOwnedSong || findOwnedSong)(input);
+    if (owned) {
+      await reply('🎵 '+String(owned.title||input).slice(0,100)+' — '+String(owned.artist||'').slice(0,80)+'\n📥 Authorized full audio found. Sending...');
+      await (runtime.sendOwnedSong || sendOwnedSong)(sock,jid,msg,owned);
+      return true;
+    }
     const song = await findSong(input, runtime.musicFetch || fetch, runtime.musicBrainzFetch || null);
     if (!song) {
       const links=songSearchLinks(input);

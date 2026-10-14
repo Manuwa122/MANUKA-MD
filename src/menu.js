@@ -2,7 +2,7 @@ export function duration(seconds) {
   const n = Math.floor(seconds);
   return `╭━━━〔 ✦ ${name} ✦ 〕━━━╮
 ┃  🤖  YOUR SMART WHATSAPP COMPANION
-┃  🟢  ACTIVE  •  V4 PRO  •  ${mode.toUpperCase()}
+┃  🟢  ACTIVE  •  V4.1  •  ${mode.toUpperCase()}
 ┃  👑  ${process.env.OWNER_NAME || 'Manuka Chamath'}
 ╰━━━━━━━━━━━━━━━━━━━━━━━╯
 
@@ -15,9 +15,9 @@ export function duration(seconds) {
 ╰─────────────────────
 
 ╭───〔 🎬 MOVIE ZONE 〕
-│ ◈ ${p}movie Avatar
+│ ◈ ${p}movie Avatar  •  ${p}film Avatar
+│ ◈ ${p}film <authorized direct HTTPS file URL>
 │ ◈ ${p}movies <film name>
-│ ◈ ${p}file <authorized direct file URL>
 ╰─ Official viewing links • legal files ─
 
 ╭───〔 📥 DOWNLOAD STUDIO 〕

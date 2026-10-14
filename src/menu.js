@@ -1,5 +1,11 @@
 export function duration(seconds) {
-  const n = Math.floor(seconds);
+  const n = Math.max(0, Math.floor(Number(seconds) || 0));
+  return `${Math.floor(n / 3600)}h ${Math.floor(n % 3600 / 60)}m ${n % 60}s`;
+}
+
+export function menuText(mode = 'self') {
+  const p = process.env.PREFIX || '.';
+  const name = process.env.BOT_NAME || 'MANUKA-MD';
   return `╭━━━〔 ✦ ${name} ✦ 〕━━━╮
 ┃  🤖  YOUR SMART WHATSAPP COMPANION
 ┃  🟢  ACTIVE  •  V4.1  •  ${mode.toUpperCase()}

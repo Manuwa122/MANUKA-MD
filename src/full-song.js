@@ -29,7 +29,7 @@ export async function sendOwnedSong(sock,jid,msg,track,download=fetchFile) {
   const mb=Number(process.env.MAX_SONG_MB||75);
   const max=Math.max(1,Math.min(100,Number.isFinite(mb)?mb:75))*1024*1024;
   const info=await download(url,filename,max);
-  const requested=safeFilename(info.filename||'song.mp3');
+  const requested=safeFilename(track.filename || info.filename || 'song.mp3');
   const match=/\.(mp3|m4a|ogg|opus|wav|aac|flac)$/i.test(requested);
   if(!match || /text\/html/.test(info.mime||''))throw Error('Full song source did not return a valid audio file');
   const mime={mp3:'audio/mpeg',m4a:'audio/mp4',ogg:'audio/ogg',opus:'audio/ogg',wav:'audio/wav',aac:'audio/aac',flac:'audio/flac'}[requested.split('.').pop().toLowerCase()];

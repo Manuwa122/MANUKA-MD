@@ -35,13 +35,32 @@ export async function handleCommand(sock, msg, body, parsed, runtime = {}) {
   if (await handleFeature(sock, msg, body, parsed, { ...runtime, ai }, memoryKey)) return;
   if (['menu', 'help'].includes(cmd)) {
     const text = menuText(runtime.settings?.data.mode || process.env.MODE || 'self');
-    if (process.env.MENU_IMAGE) {
-      try { return await sock.sendMessage(jid, { image: await readFile(process.env.MENU_IMAGE), caption: text }, { quoted: msg }); }
-      catch { /* text menu remains available if banner is missing */ }
-    }
+    try {
+      const imgPath = process.env.MENU_IMAGE || new URL('../assets/manuka-md-icon.svg', import.meta.url);
+      const source = await readFile(imgPath);
+      const image = String(imgPath).toLowerCase().endsWith('.svg') ? await sharp(source).png().toBuffer() : source;
+      return await sock.sendMessage(jid, { image, caption: text }, { quoted: msg });
+    } catch { /* text menu remains available if banner is missing */ }
     return reply(text);
   }
   if (cmd === 'health') return reply(`🟢 MANUKA-MD v4.0 healthy\\nUptime: ${duration(process.uptime())}\\nRAM: ${(process.memoryUsage().rss / 1024 / 1024).toFixed(0)} MB\\nProcessed: ${runtime.metrics?.processed || 0}\\nErrors: ${runtime.metrics?.errors || 0}`);
+  if (['alive','uptime'].includes(cmd)) {
+    const name = process.env.BOT_NAME || 'MANUKA-MD';
+    const uptime = duration(process.uptime());
+    const ram = (process.memoryUsage().rss / 1024 / 1024).toFixed(1);
+    const aliveText = `╭━━━〔 ✦ ${name} ✦ 〕━━━╮
+┃ 🟢 BOT IS ALIVE
+┃ ⚡ Status: Connected & ready
+┃ ⏱️ Uptime: ${uptime}
+┃ 💾 RAM: ${ram} MB
+┃ 🧠 AI: ${(process.env.AI_PROVIDER || 'ollama').toUpperCase()}
+┃ 👑 Owner: ${process.env.OWNER_NAME || 'Manuka Chamath'}
+╰━━━━━━━━━━━━━━━━━━━━╯
+🎬 ${process.env.PREFIX || '.'}movie Avatar  •  📥 ${process.env.PREFIX || '.'}tiktok <url>
+🌐 https://manuka-md.vercel.app
+✦ Powered by MANUKA-MD`;
+    return reply(aliveText);
+  }
   if (cmd === 'ping') return reply(`Pong! 🟢 ${process.env.BOT_NAME || 'MANUKA-MD'} online`);
   if (cmd === 'status') return reply(`🟢 ${process.env.BOT_NAME || 'MANUKA-MD'} v4.0.0\nUptime: ${duration(process.uptime())}\nMode: ${runtime.settings?.data.mode || process.env.MODE || 'self'}\nAI: ${(process.env.AI_PROVIDER || 'ollama').toUpperCase()} / ${(process.env.AI_PROVIDER === 'groq' ? process.env.GROQ_MODEL || 'openai/gpt-oss-20b' : process.env.OLLAMA_MODEL || 'llama3.2')}\nProcessed: ${runtime.metrics?.processed || 0}\nErrors: ${runtime.metrics?.errors || 0}`);
   if (cmd === 'owner') return reply(`👑 ${process.env.OWNER_NAME || 'Manuka Chamath'}\n✦ Creator of ${process.env.BOT_NAME || 'MANUKA-MD'}`);

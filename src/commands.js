@@ -1,3 +1,4 @@
+import { jingleWav } from './jingle.js';
 import { handleAdvanced } from './advanced.js';
 import { handleFeature } from './features.js';
 import { downloadContentFromMessage, jidNormalizedUser } from '@whiskeysockets/baileys';
@@ -33,13 +34,18 @@ export async function handleCommand(sock, msg, body, parsed, runtime = {}) {
   const memoryKey = `${jid}:${msg.key.fromMe ? 'self' : msg.key.participant || jid}`;
   if (await handleAdvanced(sock, msg, body, parsed, { ...runtime, ai }, memoryKey)) return;
   if (await handleFeature(sock, msg, body, parsed, { ...runtime, ai }, memoryKey)) return;
+  if (cmd === 'jingle') return sock.sendMessage(jid, { audio: jingleWav(), mimetype: 'audio/wav', ptt: false }, { quoted: msg });
   if (['menu', 'help'].includes(cmd)) {
     const text = menuText(runtime.settings?.data.mode || process.env.MODE || 'self');
     try {
       const imgPath = process.env.MENU_IMAGE || new URL('../assets/manuka-md-icon.svg', import.meta.url);
       const source = await readFile(imgPath);
       const image = String(imgPath).toLowerCase().endsWith('.svg') ? await sharp(source).png().toBuffer() : source;
-      return await sock.sendMessage(jid, { image, caption: text }, { quoted: msg });
+      await sock.sendMessage(jid, { image, caption: text }, { quoted: msg });
+      if (process.env.MENU_JINGLE !== 'false' && cmd === 'menu') {
+        try { await sock.sendMessage(jid, { audio: jingleWav(), mimetype: 'audio/wav', ptt: false }); } catch { /* menu still delivered */ }
+      }
+      return;
     } catch { /* text menu remains available if banner is missing */ }
     return reply(text);
   }

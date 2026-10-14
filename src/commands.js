@@ -1,3 +1,4 @@
+import { sendAnnouncement } from './announcements.js';
 import { jingleWav } from './jingle.js';
 import { handleAdvanced } from './advanced.js';
 import { handleFeature } from './features.js';
@@ -51,6 +52,7 @@ export async function handleCommand(sock, msg, body, parsed, runtime = {}) {
   }
   if (cmd === 'health') return reply(`🟢 MANUKA-MD v4.0 healthy\\nUptime: ${duration(process.uptime())}\\nRAM: ${(process.memoryUsage().rss / 1024 / 1024).toFixed(0)} MB\\nProcessed: ${runtime.metrics?.processed || 0}\\nErrors: ${runtime.metrics?.errors || 0}`);
   if (['alive','uptime'].includes(cmd)) {
+    // Send the text first, then an optional spoken message with original background music.
     const name = process.env.BOT_NAME || 'MANUKA-MD';
     const uptime = duration(process.uptime());
     const ram = (process.memoryUsage().rss / 1024 / 1024).toFixed(1);
@@ -65,9 +67,15 @@ export async function handleCommand(sock, msg, body, parsed, runtime = {}) {
 🎬 ${process.env.PREFIX || '.'}movie Avatar  •  📥 ${process.env.PREFIX || '.'}tiktok <url>
 🌐 https://manuka-md.vercel.app
 ✦ Powered by MANUKA-MD`;
-    return reply(aliveText);
+    await reply(aliveText);
+    if (process.env.COMMAND_VOICE !== 'false') await sendAnnouncement(sock,jid,cmd,msg);
+    return;
   }
-  if (cmd === 'ping') return reply(`Pong! 🟢 ${process.env.BOT_NAME || 'MANUKA-MD'} online`);
+  if (cmd === 'ping') {
+    await reply(`Pong! 🟢 ${process.env.BOT_NAME || 'MANUKA-MD'} online`);
+    if (process.env.COMMAND_VOICE !== 'false') await sendAnnouncement(sock,jid,cmd,msg);
+    return;
+  }
   if (cmd === 'status') return reply(`🟢 ${process.env.BOT_NAME || 'MANUKA-MD'} v4.0.0\nUptime: ${duration(process.uptime())}\nMode: ${runtime.settings?.data.mode || process.env.MODE || 'self'}\nAI: ${(process.env.AI_PROVIDER || 'ollama').toUpperCase()} / ${(process.env.AI_PROVIDER === 'groq' ? process.env.GROQ_MODEL || 'openai/gpt-oss-20b' : process.env.OLLAMA_MODEL || 'llama3.2')}\nProcessed: ${runtime.metrics?.processed || 0}\nErrors: ${runtime.metrics?.errors || 0}`);
   if (cmd === 'owner') return reply(`👑 ${process.env.OWNER_NAME || 'Manuka Chamath'}\n✦ Creator of ${process.env.BOT_NAME || 'MANUKA-MD'}`);
   if (cmd === 'resetai') { ai.clear(memoryKey); return reply('AI history cleared ✅'); }

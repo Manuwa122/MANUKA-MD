@@ -7,8 +7,8 @@ export function menuText(mode = 'self') {
   const p = process.env.PREFIX || '.';
   const name = process.env.BOT_NAME || 'MANUKA-MD';
   return `╭━━━〔 ✦ ${name} ✦ 〕━━━╮
-┃  🤖  YOUR SMART WHATSAPP COMPANION
-┃  🟢  ACTIVE  •  V4.1  •  ${mode.toUpperCase()}
+┃  💚  MORE THAN A BOT • YOUR DIGITAL FRIEND
+┃  🟢  ONLINE  •  V4.2  •  ${mode.toUpperCase()}
 ┃  👑  ${process.env.OWNER_NAME || 'Manuka Chamath'}
 ╰━━━━━━━━━━━━━━━━━━━━━━━╯
 
@@ -65,10 +65,13 @@ export function menuText(mode = 'self') {
 
 ╭───〔 📊 BOT CONTROL 〕
 │ ◈ ${p}alive  •  ${p}ping
+│ ◈ ${p}poster  — neon photo banner
+│ ◈ ${p}jingle  — original welcome music
 │ ◈ ${p}status  •  ${p}health
 │ ◈ ${p}settings  •  ${p}owner
 ╰─────────────────────
 
+🎧 Menu includes a short original audio intro.
 ✦ Powered by ${name}
 🌐 https://manuka-md.vercel.app
 _Use only content you may access or download._`;

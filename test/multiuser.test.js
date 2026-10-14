@@ -31,6 +31,7 @@ test('multi-user requests require matching own number; only approved bots launch
   const second=new MultiUserManager({root,spawn,max:1});await second.init();
   assert.match(second.list(),/stopped/);
   await second.remove('94771111111');
+  await second.remove('94772222222');
   assert.equal(second.list(),'No bot requests.');
  }finally{await rm(root,{recursive:true,force:true});}
 });

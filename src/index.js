@@ -92,7 +92,7 @@ async function connect() {
       }
       const body = unwrap(msg.message), text = textOf(body), parsed = parseCommand(text, prefix);
       if (multi && parsed && ['pair','approve','listbots','stopbot','startbot','removebot'].includes(parsed.command)) {
-        if (!jid.endsWith('@s.whatsapp.net')) { await sock.sendMessage(jid,{text:'Use a private WhatsApp chat.'}).catch(()=>{}); continue; }
+        if (!/@(s\.whatsapp\.net|lid)$/.test(jid)) { await sock.sendMessage(jid,{text:'Use a private WhatsApp chat.'}).catch(()=>{}); continue; }
         try {
           const cmd=parsed.command,phone=parsed.input.trim();
           const send=(to,text)=>sock.sendMessage(to,{text});

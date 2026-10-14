@@ -141,3 +141,18 @@ test('getfile supports filename override and sanitizes path names', async () => 
  assert.equal(sock.calls.at(-1)[1].fileName,'photo.png');
  await assert.rejects(run(sock,'file','https://example.com/a | one | two',runtime),/භාවිතය/);
 });
+
+test('owner privacy toggles persist and reject incoming senders', async () => {
+ const dir=await mkdtemp(join(tmpdir(),'manuka-privacy-'));
+ try {
+  const settings=await new Settings(join(dir,'settings.json')).load();
+  const sock=mock();
+  for(const [command,input] of [['autoreact','on'],['autostatus','on'],['presence','online']])
+   await handleCommand(sock,msg,{}, {command,input},{settings});
+  const persisted=(await new Settings(settings.path).load()).data;
+  assert.equal(persisted.autoReact,true);
+  assert.equal(persisted.autoStatusView,true);
+  assert.equal(persisted.presenceMode,'online');
+  await assert.rejects(handleCommand(sock,{...msg,key:{...msg.key,fromMe:false}},{},{command:'autoreact',input:'off'},{settings}),/Owner/);
+ } finally { await rm(dir,{recursive:true,force:true}); }
+});

@@ -17,7 +17,7 @@ test('movie request still responds with legal-watch search when catalog errors',
   movieFetch:async()=>{throw Error('blocked');}
  },'user');
  assert.equal(calls.length,1);
- assert.match(calls[0][1].caption,/Primary movie catalog temporarily unavailable/);
+ assert.match(calls[0][1].text,/Primary movie catalog temporarily unavailable/);
  assert.match(calls[0][1].text,/google.com\/search/);
 });
 

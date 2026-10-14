@@ -1,3 +1,4 @@
+import { tmdbMovie } from './tmdb-movie.js';
 import { moviePoster } from './movie-poster.js';
 import { wikiMovie } from './wiki-movie.js';
 import { movieDetails, watchSearch, communityMovieSearches } from './movie-details.js';
@@ -67,6 +68,19 @@ export async function handleAdvanced(sock, msg, body, parsed, runtime, key) {
         longDescription:best.longDescription || best.shortDescription || wiki.longDescription
       } : wiki;
     }
+    const tmdb = await tmdbMovie(title, runtime.tmdbFetch || fetch, runtime.tmdbCredentials);
+    if (tmdb) {
+      // TMDB is the preferred poster and movie-metadata source when configured.
+      best = best ? {
+        ...best,
+        artworkUrl100:tmdb.artworkUrl100 || best.artworkUrl100,
+        trackTimeMillis:tmdb.trackTimeMillis || best.trackTimeMillis,
+        language:tmdb.language || best.language,
+        primaryGenreName:tmdb.primaryGenreName || best.primaryGenreName,
+        longDescription:tmdb.longDescription || best.longDescription,
+        trackViewUrl:tmdb.trackViewUrl || best.trackViewUrl
+      } : tmdb;
+    }
     const details=best ? movieDetails(best) : null;
     // Never turn an arbitrary web search result into a purported movie download.
     // A public full-file link is shown only after open-license verification.
@@ -78,7 +92,8 @@ export async function handleAdvanced(sock, msg, body, parsed, runtime, key) {
     const alternatives=results.slice(1,4).map(x=>'• '+String(x.trackName||x.collectionName).slice(0,90)+' ('+String(x.releaseDate||'').slice(0,4)+')').join('\n');
     const caption=(details ? details.caption : '🎬 MANUKA-MD MOVIE HUB\nMovie not found in the primary catalog. Try including the release year.')+
       (alternatives ? '\n\n🎞️ Similar matches:\n'+alternatives : '')+legalLink+search+community+
-      (catalogError ? '\n⚠️ Primary movie catalog temporarily unavailable.' : '');
+      (catalogError ? '\n⚠️ Primary movie catalog temporarily unavailable.' : '')+
+      (tmdb ? '\n🎬 Movie metadata: TMDB (not endorsed or certified by TMDB).' : '');
     const art=best?.artworkUrl100;
     const preferred = typeof art==='string' && /^https:\/\//.test(art)
       ? [art.replace(/100x100bb\.(jpg|png)$/,'600x600bb.$1'),art] : [];

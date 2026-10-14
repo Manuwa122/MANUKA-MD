@@ -1,4 +1,4 @@
-import { movieDetails, watchSearch } from './movie-details.js';
+import { movieDetails, watchSearch, communityMovieSearches } from './movie-details.js';
 import { findOpenMovie } from './open-movies.js';
 import { findSong, songCaption } from './music.js';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
@@ -59,9 +59,10 @@ export async function handleAdvanced(sock, msg, body, parsed, runtime, key) {
       ? null : await findOpenMovie(title,runtime.openMovieFetch || fetch);
     const legalLink = open ? '\n\n📥 VERIFIED OPEN-LICENSE FULL-FILM FILE\n'+open.link+'\n📦 '+(open.size ? (open.size/1024/1024).toFixed(1)+' MB' : 'Size unknown')+'\nVerify license terms at the source.' : '\n\n📥 No verified free full-film download available.';
     const search='\n🔎 Find legal streaming/rental options (search results, not verified download links):\n'+watchSearch(title);
+    const community='\n\n🔍 Additional site searches (availability/permissions NOT verified):\n'+communityMovieSearches(title).map(x=>'• '+x.domain+': '+x.url).join('\n');
     const alternatives=results.slice(1,4).map(x=>'• '+String(x.trackName||x.collectionName).slice(0,90)+' ('+String(x.releaseDate||'').slice(0,4)+')').join('\n');
     const caption=(details ? details.caption : '🎬 MANUKA-MD MOVIE HUB\nMovie not found in the primary catalog. Try including the release year.')+
-      (alternatives ? '\n\n🎞️ Similar matches:\n'+alternatives : '')+legalLink+search+
+      (alternatives ? '\n\n🎞️ Similar matches:\n'+alternatives : '')+legalLink+search+community+
       (catalogError ? '\n⚠️ Primary movie catalog temporarily unavailable.' : '');
     const art=best?.artworkUrl100;
     if (typeof art === 'string' && /^https:\/\//.test(art)) {

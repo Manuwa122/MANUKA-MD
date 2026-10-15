@@ -78,6 +78,7 @@ export function menuText(mode = 'self') {
 │ ◈ ${p}poster  — neon photo banner
 │ ◈ ${p}jingle  — original welcome music
 │ ◈ ${p}status  •  ${p}health
+│ ◈ ${p}delegate add/remove <number>  •  ${p}delegate list
 │ ◈ ${p}settings  •  ${p}owner
 ╰─────────────────────
 

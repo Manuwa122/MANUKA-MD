@@ -1,3 +1,4 @@
+import { delegateCommand } from './delegates.js';
 import { handleGroupExport } from './group-export.js';
 import { findGiphyStickerBatch } from './giphy-stickers.js';
 import { STICKER_PACK } from './sticker-pack.js';
@@ -86,6 +87,7 @@ export async function handleCommand(sock, msg, body, parsed, runtime = {}) {
     return;
   }
   if (cmd === 'status') return reply(`🟢 ${process.env.BOT_NAME || 'MANUKA-MD'} v4.0.0\nUptime: ${duration(process.uptime())}\nMode: ${runtime.settings?.data.mode || process.env.MODE || 'self'}\nAI: ${(process.env.AI_PROVIDER || 'ollama').toUpperCase()} / ${(process.env.AI_PROVIDER === 'groq' ? process.env.GROQ_MODEL || 'openai/gpt-oss-20b' : process.env.OLLAMA_MODEL || 'llama3.2')}\nProcessed: ${runtime.metrics?.processed || 0}\nErrors: ${runtime.metrics?.errors || 0}`);
+  if (cmd === 'delegate') return delegateCommand(sock,msg,input,runtime.settings);
   if (cmd === 'owner') return reply(`👑 ${process.env.OWNER_NAME || 'Manuka Chamath'}\n✦ Creator of ${process.env.BOT_NAME || 'MANUKA-MD'}`);
   if (cmd === 'resetai') { ai.clear(memoryKey); return reply('AI history cleared ✅'); }
   if (['mode', 'autoreply', 'settings'].includes(cmd)) {

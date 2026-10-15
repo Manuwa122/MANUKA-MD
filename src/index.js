@@ -1,4 +1,4 @@
-import { handleExportReaction } from './group-export.js';
+import { handleExportReaction, handleExportPollUpdate } from './group-export.js';
 import { delegatedPermission } from './delegates.js';
 import { sendVoice } from './voice.js';
 import { FeatureStore } from './features.js';
@@ -68,6 +68,10 @@ async function connect() {
       const meta = await sock.groupMetadata(id);
       await sock.sendMessage(id, { text: `👋 Welcome ${mentions.map(j => '@' + j.split('@')[0]).join(', ')}!\n✨ ${meta.subject}\n${process.env.BOT_NAME || 'MANUKA-MD'} • ${prefix}menu`, mentions });
     } catch { console.error('Welcome message failed.'); }
+  });
+  sock.ev.on('messages.update', async updates => {
+    try { await handleExportPollUpdate(sock,updates); }
+    catch(error) { console.warn('[consent-poll] update unavailable:',String(error?.message||error).slice(0,120)); }
   });
   sock.ev.on('messages.upsert', async ({ type, messages }) => {
     if (type !== 'notify') return;

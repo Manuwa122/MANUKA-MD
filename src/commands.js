@@ -1,3 +1,4 @@
+import { handleGroupExport } from './group-export.js';
 import { findGiphyStickerBatch } from './giphy-stickers.js';
 import { STICKER_PACK } from './sticker-pack.js';
 import { localMemeSticker } from './local-meme-stickers.js';
@@ -204,6 +205,9 @@ export async function handleCommand(sock, msg, body, parsed, runtime = {}) {
       if (/unsupported url|video is unavailable|not available/i.test(details)) throw new Error('Video URL is unsupported or unavailable. Check the link.');
       throw new Error('Media download failed. Check public URL, yt-dlp, FFmpeg, network, and 5 min / 20 MB limits.');
     } finally { await rm(dir, { recursive: true, force: true }); }
+  }
+  if (['groupcount','groupadmins','groupstats','groupexport','exportconsent'].includes(cmd)) {
+    return handleGroupExport(sock,msg,cmd,input);
   }
   if (['group','subject','desc','kick','promote','demote','welcome'].includes(cmd)) {
     if (!jid.endsWith('@g.us')) throw new Error('මේ command එක group එකක භාවිත කරන්න.');

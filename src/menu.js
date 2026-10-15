@@ -58,6 +58,7 @@ export function menuText(mode = 'self') {
 │ ◈ ${p}group open/close
 │ ◈ ${p}welcome on/off
 │ ◈ ${p}groupcount / ${p}groupadmins / ${p}groupstats
+│ ◈ ${p}exportrequest (tap ✅/❌ to consent)
 │ ◈ ${p}exportconsent on/off
 │ ◈ ${p}groupexport (owner, opted-in members only)
 │ ◈ ${p}kick  •  ${p}promote

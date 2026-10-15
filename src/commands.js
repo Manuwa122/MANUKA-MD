@@ -208,7 +208,7 @@ export async function handleCommand(sock, msg, body, parsed, runtime = {}) {
       throw new Error('Media download failed. Check public URL, yt-dlp, FFmpeg, network, and 5 min / 20 MB limits.');
     } finally { await rm(dir, { recursive: true, force: true }); }
   }
-  if (['groupcount','groupadmins','groupstats','groupexport','exportconsent'].includes(cmd)) {
+  if (['groupcount','groupadmins','groupstats','groupexport','exportconsent','exportrequest'].includes(cmd)) {
     return handleGroupExport(sock,msg,cmd,input);
   }
   if (['group','subject','desc','kick','promote','demote','welcome'].includes(cmd)) {

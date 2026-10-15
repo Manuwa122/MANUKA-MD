@@ -1,7 +1,9 @@
+import { getAggregateVotesInPollMessage } from '@whiskeysockets/baileys';
 // In-memory group-export opt-ins. Each member must explicitly opt in from
 // their own WhatsApp account. Never export unconsenting group phone numbers.
 const consent=new Map();
 const requests=new Map();
+const polls=new Map();
 function members(meta){return Array.isArray(meta?.participants)?meta.participants:[];}
 function idOf(p){return typeof p==='string'?p:p?.id;}
 function safeCell(s){const str=String(s??'').replace(/[\r\n,"]/g,' ').slice(0,100);return /^[=+@\-]/.test(str)?"'"+str:str;}
@@ -23,6 +25,34 @@ export async function handleExportReaction(sock,msg){
  consent.set(jid,group);
  return true;
 }
+export async function handleExportPollUpdate(sock,updates) {
+ let processed=0;
+ for(const event of updates||[]){
+  const key=event?.key, jid=key?.remoteJid;
+  const poll=polls.get(jid);
+  if(!poll||key.id!==poll.id||!Array.isArray(event?.update?.pollUpdates))continue;
+  poll.updates.push(...event.update.pollUpdates);
+  if(poll.updates.length>3000)poll.updates=poll.updates.slice(-3000);
+  let aggregates;
+  try{aggregates=getAggregateVotesInPollMessage({message:poll.message,pollUpdates:poll.updates});}
+  catch{continue;} // Do not assume permission from unverifiable votes.
+  const yes=new Set(aggregates.find(x=>x.name==='✅ ඔව්, මම එකඟයි')?.voters||[]);
+  const no=new Set(aggregates.find(x=>x.name==='❌ නැහැ, මම එකඟ නැහැ')?.voters||[]);
+  const meta=await sock.groupMetadata(jid);
+  const active=new Set(members(meta).map(idOf));
+  const group=consent.get(jid)||new Set();
+  for(const old of poll.consented)group.delete(old);
+  poll.consented=new Set();
+  for(const voter of yes){
+   if(typeof voter==='string'&&active.has(voter)&&!no.has(voter)){
+    group.add(voter);poll.consented.add(voter);
+   }
+  }
+  consent.set(jid,group);
+  processed++;
+ }
+ return processed;
+}
 export async function handleGroupExport(sock,msg,command,input=''){
  const jid=msg.key.remoteJid;
  if(!jid?.endsWith('@g.us'))throw Error('This command works inside a WhatsApp group.');
@@ -42,9 +72,14 @@ export async function handleGroupExport(sock,msg,command,input=''){
  }
  if(command==='exportrequest'){
   if(!msg.key.fromMe)throw Error('Only the linked owner can send export requests.');
-  const sent=await sock.sendMessage(jid,{text:'📋 MANUKA-MD Contact Export Permission\\n\\nWould you like your WhatsApp identifier included in an Excel-compatible contact list shared in this group?\\n\\nReact ✅ to THIS message to opt in. React ❌ to opt out. You can change your response anytime before export.\\n\\nNo response means no permission. Only opted-in members are included.'},{quoted:msg});
-  if(!sent?.key?.id)throw Error('Could not track request message; export request unavailable.');
-  requests.set(jid,{id:sent.key.id});
+  const sent=await sock.sendMessage(jid,{poll:{
+   name:'📋 MANUKA-MD: ඔබේ WhatsApp අංකය Excel ලැයිස්තුවට ඇතුළත් කිරීමට එකඟද? එකඟ අයගේ විස්තර group එකේ CSV ලෙස බෙදාගැනේ.',
+   values:['✅ ඔව්, මම එකඟයි','❌ නැහැ, මම එකඟ නැහැ'],
+   selectableCount:1
+  }},{quoted:msg});
+  if(!sent?.key?.id||!sent.message)throw Error('Poll tracking unavailable: unable to record consent.');
+  polls.set(jid,{id:sent.key.id,message:sent.message,updates:[],consented:new Set()});
+  requests.delete(jid);
   return sent;
  }
  if(command==='groupcount')return reply('👥 Members: '+people.length);

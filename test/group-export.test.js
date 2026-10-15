@@ -4,7 +4,7 @@ import { handleGroupExport, handleExportReaction } from '../src/group-export.js'
 const group='test-export@g.us';
 function mock() {
  const sent=[];
- return {sent,groupMetadata:async()=>({subject:'Testing',participants:[{id:'123@s.whatsapp.net',admin:'admin'},{id:'456@s.whatsapp.net',admin:null},{id:'789@s.whatsapp.net',admin:null}]}),sendMessage:async(...args)=>sent.push(args)};
+ return {sent,user:{id:'999:1@s.whatsapp.net'},groupMetadata:async()=>({subject:'Testing',participants:[{id:'123@s.whatsapp.net',admin:'admin'},{id:'456@s.whatsapp.net',admin:null},{id:'789@s.whatsapp.net',admin:null}]}),sendMessage:async(...args)=>sent.push(args)};
 }
 const message=(participant,fromMe=false)=>({key:{remoteJid:group,participant,fromMe}});
 test('group statistics return counts without disclosing phone numbers',async()=>{
@@ -18,13 +18,14 @@ test('export only includes members who personally opted in',async()=>{
  await handleGroupExport(s,message('456@s.whatsapp.net'),'exportconsent','on');
  await assert.rejects(handleGroupExport(s,message('456@s.whatsapp.net'),'groupexport'),/owner-only/);
  await handleGroupExport(s,message(undefined,true),'groupexport');
- const csv=s.sent.at(-1)[1].document.toString();
+ const csv=s.sent.at(-2)[1].document.toString();
+ assert.equal(s.sent.at(-2)[0],'999@s.whatsapp.net');
  assert.match(csv,/456/);
  assert.doesNotMatch(csv,/789/);
  assert.doesNotMatch(csv,/123/);
  await handleGroupExport(s,message('456@s.whatsapp.net'),'exportconsent','off');
  await handleGroupExport(s,message(undefined,true),'groupexport');
- assert.doesNotMatch(s.sent.at(-1)[1].document.toString(),/456/);
+ assert.doesNotMatch(s.sent.at(-2)[1].document.toString(),/456/);
 });
 
 test('exportrequest sends Sinhala native poll, not an English reaction message',async()=>{
@@ -36,5 +37,5 @@ test('exportrequest sends Sinhala native poll, not an English reaction message',
  assert.deepEqual(poll.values,['✅ ඔව්, මම එකඟයි','❌ නැහැ, මම එකඟ නැහැ']);
  assert.equal(poll.selectableCount,1);
  await handleGroupExport(s,message(undefined,true),'groupexport');
- assert.doesNotMatch(s.sent.at(-1)[1].document.toString(),/456/);
+ assert.doesNotMatch(s.sent.at(-2)[1].document.toString(),/456/);
 });

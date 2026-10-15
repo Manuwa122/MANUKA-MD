@@ -29,9 +29,10 @@ test('export only includes members who personally opted in',async()=>{
 
 test('owner sends tap-to-consent request; only verified reactions affect export',async()=>{
  const s=mock();
- s.sendMessage=async(...args)=>{s.sent.push(args);return {key:{id:'request-123'}};};
+ s.sendMessage=async(...args)=>{s.sent.push(args);return {key:{id:'request-123'},message:{pollCreationMessage:{name:'test'}}};};
  await handleGroupExport(s,message(undefined,true),'exportrequest');
- assert.match(s.sent.at(-1)[1].text,/React ✅/);
+ assert.match(s.sent.at(-1)[1].poll.name,/ඔබේ WhatsApp අංකය/);
+ assert.deepEqual(s.sent.at(-1)[1].poll.values,['✅ ඔව්, මම එකඟයි','❌ නැහැ, මම එකඟ නැහැ']);
  const valid={key:{remoteJid:group,participant:'456@s.whatsapp.net',fromMe:false},message:{reactionMessage:{key:{id:'request-123'},text:'✅'}}};
  assert.equal(await handleExportReaction(s,valid),true);
  const forged={key:{...valid.key,participant:'789@s.whatsapp.net'},message:{reactionMessage:{key:{id:'wrong-id'},text:'✅'}}};

@@ -1,9 +1,28 @@
 // In-memory group-export opt-ins. Each member must explicitly opt in from
 // their own WhatsApp account. Never export unconsenting group phone numbers.
 const consent=new Map();
+const requests=new Map();
 function members(meta){return Array.isArray(meta?.participants)?meta.participants:[];}
 function idOf(p){return typeof p==='string'?p:p?.id;}
 function safeCell(s){const str=String(s??'').replace(/[\r\n,"]/g,' ').slice(0,100);return /^[=+@\-]/.test(str)?"'"+str:str;}
+// A tap on the bot's exact request message records opt-in; never use anonymous poll totals.
+export async function handleExportReaction(sock,msg){
+ const jid=msg?.key?.remoteJid;
+ if(!jid?.endsWith('@g.us')||msg.key.fromMe)return false;
+ const event=msg.message?.reactionMessage;
+ const request=requests.get(jid);
+ if(!request || !event?.key?.id || event.key.id!==request.id)return false;
+ const sender=msg.key.participant;
+ if(!sender || typeof sender!=='string')return false;
+ const meta=await sock.groupMetadata(jid);
+ if(!members(meta).some(p=>idOf(p)===sender))return false;
+ const group=consent.get(jid)||new Set();
+ if(event.text==='✅')group.add(sender);
+ else if(event.text==='❌'||event.text==='')group.delete(sender);
+ else return false;
+ consent.set(jid,group);
+ return true;
+}
 export async function handleGroupExport(sock,msg,command,input=''){
  const jid=msg.key.remoteJid;
  if(!jid?.endsWith('@g.us'))throw Error('This command works inside a WhatsApp group.');
@@ -20,6 +39,13 @@ export async function handleGroupExport(sock,msg,command,input=''){
   if(action==='on')group.add(sender);else group.delete(sender);
   consent.set(jid,group);
   return reply(action==='on'?'✅ Your number is included in future consent-based group exports until the bot restarts.':'✅ Your number will not be exported.');
+ }
+ if(command==='exportrequest'){
+  if(!msg.key.fromMe)throw Error('Only the linked owner can send export requests.');
+  const sent=await sock.sendMessage(jid,{text:'📋 MANUKA-MD Contact Export Permission\\n\\nWould you like your WhatsApp identifier included in an Excel-compatible contact list shared in this group?\\n\\nReact ✅ to THIS message to opt in. React ❌ to opt out. You can change your response anytime before export.\\n\\nNo response means no permission. Only opted-in members are included.'},{quoted:msg});
+  if(!sent?.key?.id)throw Error('Could not track request message; export request unavailable.');
+  requests.set(jid,{id:sent.key.id});
+  return sent;
  }
  if(command==='groupcount')return reply('👥 Members: '+people.length);
  const admins=people.filter(p=>p?.admin);

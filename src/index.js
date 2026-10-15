@@ -1,3 +1,4 @@
+import { handleExportReaction } from './group-export.js';
 import { delegatedPermission } from './delegates.js';
 import { sendVoice } from './voice.js';
 import { FeatureStore } from './features.js';
@@ -80,6 +81,10 @@ async function connect() {
         continue;
       }
       if (!msg.message || !jid || !/@(g\.us|s\.whatsapp\.net|lid)$/.test(jid)) continue;
+      if (msg.message?.reactionMessage && jid.endsWith('@g.us')) {
+        try { await handleExportReaction(sock,msg); } catch { console.warn('Consent reaction processing failed.'); }
+        continue;
+      }
       if (settings.data.autoReact && !msg.key.fromMe && msg.key.id && !msg.message?.reactionMessage) {
         const reactId = `${jid}:${msg.key.id}`;
         if (!reacted.has(reactId)) {

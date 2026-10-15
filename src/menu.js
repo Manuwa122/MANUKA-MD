@@ -57,7 +57,8 @@ export function menuText(mode = 'self') {
 ╭───〔 👥 GROUP & CHAT 〕
 │ ◈ ${p}group open/close
 │ ◈ ${p}welcome on/off
-│ ◈ ${p}groupcount / ${p}groupadmins / ${p}groupstats
+│ ◈ ${p}grouplist (owner)  •  ${p}groupstats
+│ ◈ ${p}groupcount / ${p}groupadmins
 │ ◈ ${p}exportrequest (tap ✅/❌ to consent)
 │ ◈ ${p}exportconsent on/off
 │ ◈ ${p}groupexport (owner, opted-in members only)

@@ -4,6 +4,10 @@ import { getAggregateVotesInPollMessage, jidNormalizedUser } from '@whiskeysocke
 const consent=new Map();
 const requests=new Map();
 const polls=new Map();
+export function getTrackedPollMessage(key){
+ const poll=polls.get(key?.remoteJid);
+ return poll && poll.id===key?.id ? poll.message : undefined;
+}
 function members(meta){return Array.isArray(meta?.participants)?meta.participants:[];}
 function idOf(p){return typeof p==='string'?p:p?.id;}
 function voterId(v){return typeof v==='string'?v:(v?.voter||v?.id||v?.participant||null);}
@@ -34,7 +38,14 @@ export async function handleExportPollUpdate(sock,updates) {
   const key=event?.key, jid=key?.remoteJid;
   const poll=polls.get(jid);
   if(!poll||key.id!==poll.id||!Array.isArray(event?.update?.pollUpdates))continue;
-  poll.updates.push(...event.update.pollUpdates);
+  // Every voter replaces their earlier vote; do not keep stale Yes after a No.
+  for(const update of event.update.pollUpdates){
+   const author=update?.pollUpdateMessageKey?.participant || update?.pollUpdateMessageKey?.remoteJid;
+   if(!author)continue;
+   poll.updates=poll.updates.filter(old=>
+    (old?.pollUpdateMessageKey?.participant || old?.pollUpdateMessageKey?.remoteJid)!==author);
+   poll.updates.push(update);
+  }
   if(poll.updates.length>3000)poll.updates=poll.updates.slice(-3000);
   let aggregates;
   try{aggregates=getAggregateVotesInPollMessage({message:poll.message,pollUpdates:poll.updates});}

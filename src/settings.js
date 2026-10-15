@@ -4,14 +4,14 @@ import { dirname } from 'node:path';
 export class Settings {
   constructor(path = process.env.SETTINGS_FILE || './data/settings.json') {
     this.path = path;
-    this.data = { mode: process.env.MODE || 'self', autoChats: [], welcomeGroups: [], autoVoiceChats: [], autoReact: false, autoStatusView: false, presenceMode: 'offline' };
+    this.data = { mode: process.env.MODE || 'self', autoChats: [], welcomeGroups: [], autoVoiceChats: [], autoReact: false, autoStatusView: false, presenceMode: 'offline', delegatedOperators: [] };
     this.pending = Promise.resolve();
   }
   async load() {
     try {
       const data = JSON.parse(await readFile(this.path, 'utf8'));
       if (!['self', 'public'].includes(data.mode) || !Array.isArray(data.autoChats) || !Array.isArray(data.welcomeGroups)) throw new Error('Invalid settings');
-      this.data = { mode: data.mode, autoChats: data.autoChats.filter(x => typeof x === 'string'), welcomeGroups: data.welcomeGroups.filter(x => typeof x === 'string'), autoVoiceChats: (Array.isArray(data.autoVoiceChats) ? data.autoVoiceChats : []).filter(x => typeof x === 'string'), autoReact: data.autoReact === true, autoStatusView: data.autoStatusView === true, presenceMode: ['offline','online'].includes(data.presenceMode) ? data.presenceMode : 'offline' };
+      this.data = { mode: data.mode, autoChats: data.autoChats.filter(x => typeof x === 'string'), welcomeGroups: data.welcomeGroups.filter(x => typeof x === 'string'), autoVoiceChats: (Array.isArray(data.autoVoiceChats) ? data.autoVoiceChats : []).filter(x => typeof x === 'string'), autoReact: data.autoReact === true, autoStatusView: data.autoStatusView === true, presenceMode: ['offline','online'].includes(data.presenceMode) ? data.presenceMode : 'offline', delegatedOperators: (Array.isArray(data.delegatedOperators)?data.delegatedOperators:[]).filter(x=>typeof x==='string' && /^[1-9][0-9]{7,14}@s\.whatsapp\.net$/.test(x)) };
     } catch (error) { if (error.code !== 'ENOENT') throw error; }
     return this;
   }

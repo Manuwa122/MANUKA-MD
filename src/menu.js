@@ -57,6 +57,9 @@ export function menuText(mode = 'self') {
 ╭───〔 👥 GROUP & CHAT 〕
 │ ◈ ${p}group open/close
 │ ◈ ${p}welcome on/off
+│ ◈ ${p}groupcount / ${p}groupadmins / ${p}groupstats
+│ ◈ ${p}exportconsent on/off
+│ ◈ ${p}groupexport (owner, opted-in members only)
 │ ◈ ${p}kick  •  ${p}promote
 │ ◈ ${p}chat mute 8h / pin / archive
 │ ◈ ${p}channel info <ID>

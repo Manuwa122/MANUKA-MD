@@ -1,4 +1,4 @@
-import { getAggregateVotesInPollMessage } from '@whiskeysockets/baileys';
+import { getAggregateVotesInPollMessage, jidNormalizedUser } from '@whiskeysockets/baileys';
 // In-memory group-export opt-ins. Each member must explicitly opt in from
 // their own WhatsApp account. Never export unconsenting group phone numbers.
 const consent=new Map();
@@ -6,6 +6,9 @@ const requests=new Map();
 const polls=new Map();
 function members(meta){return Array.isArray(meta?.participants)?meta.participants:[];}
 function idOf(p){return typeof p==='string'?p:p?.id;}
+function voterId(v){return typeof v==='string'?v:(v?.voter||v?.id||v?.participant||null);}
+function validJid(id){return typeof id==='string' && /@(s\.whatsapp\.net|lid)$/.test(id);}
+function ownChat(sock){const id=sock.user?.id;if(!id)throw Error('Bot account unavailable for private export.');return jidNormalizedUser(id);}
 function safeCell(s){const str=String(s??'').replace(/[\r\n,"]/g,' ').slice(0,100);return /^[=+@\-]/.test(str)?"'"+str:str;}
 // A tap on the bot's exact request message records opt-in; never use anonymous poll totals.
 export async function handleExportReaction(sock,msg){
@@ -36,16 +39,19 @@ export async function handleExportPollUpdate(sock,updates) {
   let aggregates;
   try{aggregates=getAggregateVotesInPollMessage({message:poll.message,pollUpdates:poll.updates});}
   catch{continue;} // Do not assume permission from unverifiable votes.
-  const yes=new Set(aggregates.find(x=>x.name==='✅ ඔව්, මම එකඟයි')?.voters||[]);
-  const no=new Set(aggregates.find(x=>x.name==='❌ නැහැ, මම එකඟ නැහැ')?.voters||[]);
+  const yes=new Set((aggregates.find(x=>x.name==='✅ ඔව්, මම එකඟයි')?.voters||[]).map(voterId).filter(Boolean));
+  const no=new Set((aggregates.find(x=>x.name==='❌ නැහැ, මම එකඟ නැහැ')?.voters||[]).map(voterId).filter(Boolean));
   const meta=await sock.groupMetadata(jid);
-  const active=new Set(members(meta).map(idOf));
+  const active=new Set(members(meta).flatMap(p=>[idOf(p),p?.phoneNumber,p?.lid].filter(validJid)));
+  const canonical=new Map(members(meta).flatMap(p=>[idOf(p),p?.phoneNumber,p?.lid].filter(validJid).map(alias=>[alias,idOf(p)])));
   const group=consent.get(jid)||new Set();
   for(const old of poll.consented)group.delete(old);
   poll.consented=new Set();
   for(const voter of yes){
-   if(typeof voter==='string'&&active.has(voter)&&!no.has(voter)){
-    group.add(voter);poll.consented.add(voter);
+   if(validJid(voter)&&active.has(voter)&&!no.has(voter)){
+    const member=canonical.get(voter);
+    if(!member)continue;
+    group.add(member);poll.consented.add(member);
    }
   }
   consent.set(jid,group);
@@ -73,7 +79,7 @@ export async function handleGroupExport(sock,msg,command,input=''){
  if(command==='exportrequest'){
   if(!msg.key.fromMe)throw Error('Only the linked owner can send export requests.');
   const sent=await sock.sendMessage(jid,{poll:{
-   name:'📋 MANUKA-MD: ඔබේ WhatsApp අංකය Excel ලැයිස්තුවට ඇතුළත් කිරීමට එකඟද? එකඟ අයගේ විස්තර group එකේ CSV ලෙස බෙදාගැනේ.',
+   name:'📋 MANUKA-MD: ඔබේ WhatsApp අංකය Excel ලැයිස්තුවට ඇතුළත් කිරීමට එකඟද? එකඟ අයගේ විස්තර bot හිමිකරුට පමණක් private CSV ලෙස යවනු ලැබේ.',
    values:['✅ ඔව්, මම එකඟයි','❌ නැහැ, මම එකඟ නැහැ'],
    selectableCount:1
   }},{quoted:msg});
@@ -91,7 +97,9 @@ export async function handleGroupExport(sock,msg,command,input=''){
   const eligible=people.map(idOf).filter(id=>id&&group.has(id));
   const records=eligible.map((id,i)=>[i+1,safeCell(id.split('@')[0])].join(','));
   const csv='Index,Consented WhatsApp identifier\r\n'+records.join('\r\n')+'\r\n';
-  return sock.sendMessage(jid,{document:Buffer.from(csv,'utf8'),mimetype:'text/csv',fileName:'MANUKA-MD-consented-group-members.csv',caption:'📋 Consented members: '+eligible.length+'. Members not opted in are excluded.'},{quoted:msg});
+  const recipient=ownChat(sock);
+  await sock.sendMessage(recipient,{document:Buffer.from(csv,'utf8'),mimetype:'text/csv',fileName:'MANUKA-MD-consented-group-members.csv',caption:'📋 '+String(meta.subject||'Group').slice(0,60)+' — එකඟ වූ සාමාජිකයන්: '+eligible.length+'. අවසර නොදුන් අය ඇතුළත් නැත.'});
+  return reply('✅ එකඟ වූ සාමාජිකයන්ගේ CSV file එක ඔබේ private chat එකට යැව්වා.');
  }
  return false;
 }

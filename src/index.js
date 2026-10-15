@@ -1,4 +1,4 @@
-import { handleExportReaction, handleExportPollUpdate } from './group-export.js';
+import { handleExportReaction, handleExportPollUpdate, getTrackedPollMessage } from './group-export.js';
 import { delegatedPermission } from './delegates.js';
 import { sendVoice } from './voice.js';
 import { FeatureStore } from './features.js';
@@ -24,7 +24,7 @@ const reactionEmoji = ['❤️', '👍', '✨', '💙', '🔥', '😊'];
 let stopping = false, current, reconnect, reconnectAttempts = 0;
 async function connect() {
   const { state, saveCreds } = await useMultiFileAuthState(process.env.AUTH_DIR || './auth');
-  const sock = makeWASocket({ logger, auth: { creds: state.creds, keys: makeCacheableSignalKeyStore(state.keys, logger) }, markOnlineOnConnect: false, syncFullHistory: false });
+  const sock = makeWASocket({ logger, auth: { creds: state.creds, keys: makeCacheableSignalKeyStore(state.keys, logger) }, markOnlineOnConnect: false, syncFullHistory: false, getMessage: async key => getTrackedPollMessage(key) });
   current = sock;
   // Owner-controlled pairing-code mode. Never expose a pairing code on a public website.
   let pairingRequested = false;

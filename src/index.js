@@ -1,3 +1,4 @@
+import { delegatedPermission } from './delegates.js';
 import { sendVoice } from './voice.js';
 import { FeatureStore } from './features.js';
 import 'dotenv/config';
@@ -90,7 +91,7 @@ async function connect() {
       }
       const body = unwrap(msg.message), text = textOf(body), parsed = parseCommand(text, prefix);
       const auto = !parsed && shouldAutoReply(msg, text, settings.data) && !settings.data.pausedChats?.includes(jid);
-      if (!auto && (!parsed || (settings.data.mode === 'self' && !msg.key.fromMe))) continue;
+      if (!auto && (!parsed || (settings.data.mode === 'self' && !delegatedPermission(msg,parsed.command,settings.data)))) continue;
       const id = `${jid}:${msg.key.id}`;
       if (seen.has(id)) continue;
       seen.set(id, Date.now());
@@ -109,7 +110,10 @@ async function connect() {
             try { await sendVoice(sock, jid, answer.slice(0,1500), msg); }
             catch { await sock.sendMessage(jid, { text: '🎙️ Voice unavailable. Python/gTTS/FFmpeg setup බලන්න. Text answer ඉහත ඇත.' }, { quoted: msg }); }
           }
-        } else await handleCommand(sock, msg, body, parsed, runtime);
+        } else {
+          if(!delegatedPermission(msg,parsed.command,settings.data) && !msg.key.fromMe && settings.data.mode==='public' && Array.isArray(settings.data.delegatedOperators) && settings.data.delegatedOperators.includes(msg.key.participant||jid)) continue;
+          await handleCommand(sock, msg, body, parsed, runtime);
+        }
         metrics.processed++;
       }
       catch (error) {

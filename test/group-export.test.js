@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { handleGroupExport, handleExportReaction } from '../src/group-export.js';
+import { handleGroupExport, handleExportReaction, getTrackedPollMessage, handleExportPollUpdate } from '../src/group-export.js';
 const group='test-export@g.us';
 function mock() {
  const sent=[];
@@ -38,4 +38,14 @@ test('exportrequest sends Sinhala native poll, not an English reaction message',
  assert.equal(poll.selectableCount,1);
  await handleGroupExport(s,message(undefined,true),'groupexport');
  assert.doesNotMatch(s.sent.at(-2)[1].document.toString(),/456/);
+});
+
+test('stored poll creation is retrievable for Baileys vote decryption',async()=>{
+ const sock=mock();
+ sock.sendMessage=async(...args)=>{sock.sent.push(args);return {key:{remoteJid:group,id:'live-poll'},message:{pollCreationMessage:{options:[{optionName:'✅ ඔව්, මම එකඟයි'},{optionName:'❌ නැහැ, මම එකඟ නැහැ'}]}}};};
+ await handleGroupExport(sock,message(undefined,true),'exportrequest');
+ const original=getTrackedPollMessage({remoteJid:group,id:'live-poll'});
+ assert.ok(original?.pollCreationMessage);
+ assert.equal(getTrackedPollMessage({remoteJid:group,id:'another'}),undefined);
+ assert.equal(await handleExportPollUpdate(sock,[{key:{remoteJid:group,id:'unrelated'},update:{pollUpdates:[]}}]),0);
 });
